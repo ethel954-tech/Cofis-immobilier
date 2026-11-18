@@ -53,7 +53,6 @@ export default function PageImmeubles() {
       }
       if (proprietairesStockes) {
         const parsed: unknown = JSON.parse(proprietairesStockes);
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
         if (Array.isArray(parsed) && parsed.length) setProprietaires(parsed as Proprietaire[]);
       }
     } catch {
