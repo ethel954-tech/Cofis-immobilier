@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
+
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { FileText, CirclePlus, Search, Pencil, Trash2, X, CalendarDays, Home, Users, Wallet } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
@@ -53,6 +55,7 @@ export default function PageBaux(){
  useEffect(()=>{
   try{
    const lire=<T,>(cle:string,defaut:T):T=>{const brut=localStorage.getItem(cle);if(!brut)return defaut;const valeur:unknown=JSON.parse(brut);return (Array.isArray(valeur)?valeur:defaut) as T;};
+   // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
    setBaux(lire(CLE_BAUX,bauxExemple));setLocataires(lire(CLE_LOCATAIRES,locatairesExemple));setUnites(lire(CLE_UNITES,unitesExemple));setImmeubles(lire(CLE_IMMEUBLES,immeublesExemple));
   }catch{/* Garder les données d'exemple. */}finally{setInitialise(true);}
  },[]);
