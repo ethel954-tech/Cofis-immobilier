@@ -22,7 +22,7 @@ Les modules de démonstration utilisent le stockage local du navigateur. Les don
 
 - Next.js et TypeScript.
 - PostgreSQL via Supabase.
-- Supabase Auth et stockage privé.
+- Supabase Auth et stockage privé (intégration préparée, non activée).
 - Interface responsive avec Tailwind CSS et Lucide.
 
 ## Démarrage local
@@ -57,9 +57,13 @@ Exécuter ces commandes depuis le dossier du projet. Un résultat local doit êt
 - Les clés de service Supabase ne doivent jamais être exposées au navigateur.
 - `main` ne reçoit que des versions relues et stabilisées.
 
+## Intégration Supabase — état
+
+Les clients navigateur et serveur, ainsi que la validation des variables publiques, sont préparés dans `src/lib/supabase/`. Ils ne sont pas encore utilisés par les pages : aucune connexion Supabase n'est effectuée et le mode démonstration local reste inchangé. Voir `docs/REVUE_INTEGRATION_SUPABASE.md`.
+
 ## Prochaines étapes
 
-1. Revue locale du lot actuel : typecheck, lint, build et parcours fonctionnels.
-2. Validation des règles métier des baux et de l'occupation.
-3. Conception contrôlée des échéances, paiements, impayés, dépenses et reversements.
-4. Mise en place de l'authentification et de la persistance serveur après approbation explicite de l'environnement et du schéma.
+1. Revue locale du lot : installation des dépendances, typecheck, lint et build.
+2. Revue de sécurité de l'intégration et validation des règles métier encore ouvertes.
+3. Approbation explicite de l'environnement Supabase et du schéma final.
+4. Activation contrôlée de l'authentification et de la persistance serveur, après tests RLS/RPC.
