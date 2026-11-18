@@ -64,11 +64,11 @@ export default function PageBaux(){
  const nomLocataire=(id:number)=>locataires.find(x=>x.id===id)?.nom??"Locataire introuvable";
  const unite=(id:number)=>unites.find(x=>x.id===id);
  const lieuUnite=(id:number)=>{const u=unite(id);const b=immeubles.find(x=>x.id===u?.immeubleId);return u? `${u.reference} · ${b?.nom??"Immeuble non retrouvé"}`:"Unité introuvable";};
- const filtres=useMemo(()=>baux.filter(b=>{
+ const filtres=baux.filter(b=>{
   const q=recherche.trim().toLocaleLowerCase("fr");
   const trouve=!q||[b.reference,nomLocataire(b.locataireId),lieuUnite(b.uniteId)].some(x=>x.toLocaleLowerCase("fr").includes(q));
   return trouve&&(filtre==="Tous"||b.statut===filtre);
- }),[baux,locataires,unites,immeubles,recherche,filtre]);
+ });
  const ouvrirCreation=()=>{setEditionId(null);setForm({...vide,locataireId:locataires[0]?String(locataires[0].id):"",uniteId:unites[0]?String(unites[0].id):""});setModal(true);};
  const ouvrirEdition=(b:Bail)=>{setEditionId(b.id);setForm({reference:b.reference,locataireId:String(b.locataireId),uniteId:String(b.uniteId),dateDebut:b.dateDebut,dateFin:b.dateFin,loyerMensuel:String(b.loyerMensuel),depotGarantie:String(b.depotGarantie),statut:b.statut,notes:b.notes});setModal(true);};
  const enregistrer=(e:FormEvent<HTMLFormElement>)=>{
