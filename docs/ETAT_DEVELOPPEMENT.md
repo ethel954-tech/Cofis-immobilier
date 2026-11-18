@@ -11,6 +11,7 @@ Dernière mise à jour : 18 novembre 2026
 - Aucune migration appliquée à une base partagée.
 - Clients Supabase navigateur/serveur préparés sur `development`, mais non appelés par les pages.
 - Aucune session Auth réelle ni protection de routes activée.
+- Modèle d'identité et matrice de rôles proposés dans `docs/MODELE_AUTORISATION_PROPOSE.md` ; droits détaillés non approuvés.
 
 ## Modules de démonstration présents
 
@@ -53,6 +54,10 @@ Les éléments suivants restent à confirmer avant toute automatisation ou migra
 - `src/lib/supabase/client-serveur.ts` est protégé par `server-only` et utilise les cookies Next.js.
 - Aucun client `service_role` n'est fourni et aucune page n'appelle ces clients.
 - La revue de sécurité et les conditions d'activation sont détaillées dans `docs/REVUE_INTEGRATION_SUPABASE.md`.
+
+## Modèle d'identité et d'autorisations
+
+Une proposition de rattachement Auth → `app.principals` et une matrice fonctionnelle de haut niveau ont été documentées. Les droits détaillés, les périmètres de propriétés et les règles de séparation des tâches restent à valider. Aucun contrôle d'accès réel n'a été activé.
 
 ## Prochain lot technique
 
