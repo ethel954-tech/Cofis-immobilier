@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
+
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Building2, CirclePlus, Mail, MapPin, Pencil, Phone, Search, Trash2, Users, X } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
@@ -30,6 +32,7 @@ export default function PageLocataires() {
       const stock = localStorage.getItem(CLE_LOCATAIRES);
       if (stock) {
         const parsed: unknown = JSON.parse(stock);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
         if (Array.isArray(parsed)) setLocataires(parsed as Locataire[]);
       }
     } catch {
