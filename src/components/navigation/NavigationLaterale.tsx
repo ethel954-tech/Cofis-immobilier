@@ -4,7 +4,7 @@ import Link from "next/link";
 import {
   ArrowLeftRight,
   Building2,
-  ChartNoAxesCombined,
+  BarChart3,
   ClipboardList,
   CreditCard,
   FileText,
@@ -32,10 +32,10 @@ const elements: ElementNavigation[] = [
   { libelle: "Baux", icone: FileText, groupe: "Location" },
   { libelle: "Échéances", icone: ClipboardList, groupe: "Finance" },
   { libelle: "Paiements", icone: CreditCard, groupe: "Finance" },
-  { libelle: "Impayés", icone: ChartNoAxesCombined, groupe: "Finance" },
+  { libelle: "Impayés", icone: BarChart3, groupe: "Finance" },
   { libelle: "Dépenses", icone: Wallet, groupe: "Finance" },
   { libelle: "Reversements", icone: ArrowLeftRight, groupe: "Finance" },
-  { libelle: "Rapports", icone: ChartNoAxesCombined, groupe: "Pilotage" },
+  { libelle: "Rapports", icone: BarChart3, groupe: "Pilotage" },
   { libelle: "Paramètres", icone: Settings2, groupe: "Administration" }
 ];
 
