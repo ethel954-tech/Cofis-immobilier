@@ -24,8 +24,8 @@ type ElementNavigation = {
 };
 
 const elements: ElementNavigation[] = [
-  { libelle: "Vue d'ensemble", icone: LayoutDashboard, href: "/dashboard", actif: true, groupe: "Général" },
-  { libelle: "Propriétaires", icone: Users, groupe: "Patrimoine" },
+  { libelle: "Vue d'ensemble", icone: LayoutDashboard, href: "/dashboard", groupe: "Général" },
+  { libelle: "Propriétaires", icone: Users, href: "/proprietaires", actif: true, groupe: "Patrimoine" },
   { libelle: "Immeubles", icone: Building2, groupe: "Patrimoine" },
   { libelle: "Unités / Logements", icone: Building2, groupe: "Patrimoine" },
   { libelle: "Locataires", icone: Users, groupe: "Location" },
@@ -59,6 +59,7 @@ export function NavigationLaterale() {
             <div className="space-y-1">
               {elements.filter((element) => element.groupe === groupe).map((element) => {
                 const Icone = element.icone;
+                const classes = element.actif ? "bg-blue-50 text-blue-700 font-semibold" : "text-slate-400 font-medium";
                 const contenu = (
                   <>
                     <Icone size={17} strokeWidth={1.8} />
@@ -68,7 +69,7 @@ export function NavigationLaterale() {
                 );
 
                 return element.href ? (
-                  <Link key={element.libelle} href={element.href} aria-current={element.actif ? "page" : undefined} className="flex items-center gap-3 rounded-xl bg-blue-50 px-3 py-2.5 text-[13px] font-semibold text-blue-700">
+                  <Link key={element.libelle} href={element.href} aria-current={element.actif ? "page" : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] transition hover:bg-blue-50 hover:text-blue-700 ${classes}`}>
                     {contenu}
                   </Link>
                 ) : (
