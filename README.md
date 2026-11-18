@@ -1,29 +1,65 @@
 # COFIS IMMOBILIER
 
-COFIS IMMOBILIER is a property and rental management platform designed for the Cameroonian market.
+Plateforme de gestion immobilière et locative destinée au marché camerounais (FCFA / XAF).
 
-## Project status
+## État actuel
 
-The repository is being initialized. Application development will take place on the `development` branch. The `main` branch is reserved for reviewed, stable releases.
+Le développement fonctionnel se poursuit sur la branche `development`. La branche `main` reste réservée aux versions relues et stabilisées.
 
-## Planned technology
+### Modules disponibles en démonstration
 
-- Next.js
-- TypeScript
-- PostgreSQL with Supabase
-- Supabase Auth and private Storage
+- Tableau de bord interne.
+- Répertoire des propriétaires.
+- Gestion des immeubles et rattachement aux propriétaires.
+- Gestion des unités / logements et rattachement aux immeubles.
+- Répertoire des locataires.
+- Registre des baux et rattachement locataire–unité.
+- Rapports synthétiques et export CSV du résumé.
 
-## Core business scope
+Les modules de démonstration utilisent le stockage local du navigateur. Les données d'exemple sont fictives, ne sont pas partagées entre utilisateurs et ne constituent pas des données métier persistantes. Ne pas y saisir de données personnelles, pièces d'identité ou contrats réels.
 
-Owners, properties, units, tenants, leases, rent schedules, payments, arrears, expenses, owner remittances, users and roles, settings, and reports.
+## Technologie prévue
 
-## Important development safeguards
+- Next.js et TypeScript.
+- PostgreSQL via Supabase.
+- Supabase Auth et stockage privé.
+- Interface responsive avec Tailwind CSS et Lucide.
 
-- Do not apply database migrations to a shared or production environment without explicit approval.
-- Do not create or connect a Supabase project without explicit approval.
-- Keep financial operations auditable and use integer minor currency units (FCFA/XAF) rather than floating-point values.
-- Validate unresolved business rules before implementing them as definitive behavior.
+## Démarrage local
 
-## Getting started
+Prérequis : Node.js et npm.
 
-The application scaffold and setup instructions will be added on the `development` branch.
+```powershell
+git switch development
+git pull origin development
+npm install
+npm run dev
+```
+
+Ouvrir ensuite http://localhost:3000.
+
+Vérifications disponibles :
+
+```powershell
+npm run typecheck
+npm run lint
+npm run build
+```
+
+Exécuter ces commandes depuis le dossier du projet. Un résultat local doit être vérifié avant de considérer le lot comme validé.
+
+## Principes de sécurité et de livraison
+
+- Aucun projet Supabase partagé ou de production ne doit être créé, connecté ou modifié sans autorisation explicite.
+- Aucune migration ne doit être appliquée à une base partagée ou de production sans autorisation explicite.
+- Les opérations financières réelles doivent être traçables et mises en œuvre selon l'architecture approuvée, avec des montants entiers en FCFA/XAF.
+- Les règles métier encore ouvertes doivent être validées avant d'être codées comme règles définitives.
+- Les clés de service Supabase ne doivent jamais être exposées au navigateur.
+- `main` ne reçoit que des versions relues et stabilisées.
+
+## Prochaines étapes
+
+1. Revue locale du lot actuel : typecheck, lint, build et parcours fonctionnels.
+2. Validation des règles métier des baux et de l'occupation.
+3. Conception contrôlée des échéances, paiements, impayés, dépenses et reversements.
+4. Mise en place de l'authentification et de la persistance serveur après approbation explicite de l'environnement et du schéma.
