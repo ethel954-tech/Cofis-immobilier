@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --fond: #f5f7fb;
+  --surface: #ffffff;
+  --texte: #172033;
+  --texte-secondaire: #64748b;
+  --bleu: #2563eb;
+  --bleu-fonce: #1d4ed8;
+  --bordure: #e5eaf2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: #dbeafe;
+  color: #1e40af;
+}
