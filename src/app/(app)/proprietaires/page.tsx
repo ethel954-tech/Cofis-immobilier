@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   ArrowDownUp,
   Building2,
@@ -37,6 +37,8 @@ const proprietairesInitiaux: Proprietaire[] = [
   { id: 3, nom: "Exemple — Marie Nguemo", type: "Particulier", telephone: "+237 6 90 00 00 03", email: "marie.exemple@cofis.cm", ville: "Bafoussam", biens: 1 }
 ];
 
+const CLE_STOCKAGE_PROPRIETAIRES = "cofis_demo_proprietaires_v1";
+
 const formulaireVide = {
   nom: "",
   type: "Particulier" as TypeProprietaire,
@@ -47,6 +49,32 @@ const formulaireVide = {
 
 export default function PageProprietaires() {
   const [proprietaires, setProprietaires] = useState(proprietairesInitiaux);
+  const [stockageInitialise, setStockageInitialise] = useState(false);
+
+  useEffect(() => {
+    try {
+      const donneesEnregistrees = window.localStorage.getItem(CLE_STOCKAGE_PROPRIETAIRES);
+      if (donneesEnregistrees) {
+        const proprietairesEnregistres: unknown = JSON.parse(donneesEnregistrees);
+        if (Array.isArray(proprietairesEnregistres)) {
+          setProprietaires(proprietairesEnregistres as Proprietaire[]);
+        }
+      }
+    } catch {
+      // En cas de stockage illisible, conserver les données de démonstration initiales.
+    } finally {
+      setStockageInitialise(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!stockageInitialise) return;
+    try {
+      window.localStorage.setItem(CLE_STOCKAGE_PROPRIETAIRES, JSON.stringify(proprietaires));
+    } catch {
+      // L'interface reste utilisable même si le navigateur bloque le stockage local.
+    }
+  }, [proprietaires, stockageInitialise]);
   const [recherche, setRecherche] = useState("");
   const [filtre, setFiltre] = useState<"Tous" | TypeProprietaire>("Tous");
   const [modalOuvert, setModalOuvert] = useState(false);
@@ -155,7 +183,7 @@ export default function PageProprietaires() {
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-5 py-3 text-[10px] text-slate-400"><span>Affichage de {proprietairesFiltres.length} sur {proprietaires.length} fiche(s)</span><span>Les données affichées sont fictives.</span></div>
         </section>
 
-        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 p-4"><span className="mt-0.5 text-amber-700"><ArrowDownUp size={16} /></span><div><p className="text-xs font-semibold text-amber-900">Mode démonstration</p><p className="mt-1 text-[11px] leading-5 text-amber-800">Les fiches sont fictives et les ajouts/modifications restent dans la mémoire de cette page. Elles ne sont pas enregistrées dans une base de données et seront réinitialisées au rechargement.</p></div></div>
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 p-4"><span className="mt-0.5 text-amber-700"><ArrowDownUp size={16} /></span><div><p className="text-xs font-semibold text-amber-900">Mode démonstration</p><p className="mt-1 text-[11px] leading-5 text-amber-800">Les fiches sont fictives et conservées uniquement dans le stockage local de ce navigateur pour cette démonstration. Elles ne sont pas synchronisées avec une base de données ni partagées avec d'autres utilisateurs. N'y saisissez pas de données personnelles réelles.</p></div></div>
       </div>
 
       {modalOuvert && <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/40 p-4 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) setModalOuvert(false); }}>
