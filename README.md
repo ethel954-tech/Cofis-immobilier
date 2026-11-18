@@ -59,7 +59,7 @@ Exécuter ces commandes depuis le dossier du projet. Un résultat local doit êt
 
 ## Intégration Supabase — état
 
-Les clients navigateur et serveur, ainsi que la validation des variables publiques, sont préparés dans `src/lib/supabase/`. Ils ne sont pas encore utilisés par les pages : aucune connexion Supabase n'est effectuée et le mode démonstration local reste inchangé. Voir `docs/REVUE_INTEGRATION_SUPABASE.md`.
+Les clients navigateur et serveur, ainsi que la validation des variables publiques, sont préparés dans `src/lib/supabase/`. Ils ne sont pas encore utilisés par les pages : aucune connexion Supabase n'est effectuée et le mode démonstration local reste inchangé. Voir `docs/REVUE_INTEGRATION_SUPABASE.md` et la proposition de rôles dans `docs/MODELE_AUTORISATION_PROPOSE.md`.
 
 ## Prochaines étapes
 
