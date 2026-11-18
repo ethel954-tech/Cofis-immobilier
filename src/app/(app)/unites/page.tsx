@@ -1,7 +1,9 @@
 "use client";
 
+/* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
+
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Building2, CirclePlus, DoorOpen, Home, Pencil, Search, Trash2, X, Ruler, Wallet } from "lucide-react";
+import { Building2, CirclePlus, DoorOpen, Home, Pencil, Search, Trash2, X, Wallet } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 
 type StatutUnite = "Disponible" | "Occupée" | "En maintenance" | "Inactive";
@@ -51,10 +53,12 @@ export default function PageUnites() {
       const stockImmeubles = localStorage.getItem(CLE_IMMEUBLES);
       if (stockUnites) {
         const parsed: unknown = JSON.parse(stockUnites);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
         if (Array.isArray(parsed)) setUnites(parsed as Unite[]);
       }
       if (stockImmeubles) {
         const parsed: unknown = JSON.parse(stockImmeubles);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
         if (Array.isArray(parsed) && parsed.length) setImmeubles(parsed as Immeuble[]);
       }
     } catch {
