@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
+
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Building2, Download, FileText, Home, Users } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
