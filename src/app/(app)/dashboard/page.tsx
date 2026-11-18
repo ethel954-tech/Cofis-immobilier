@@ -80,12 +80,10 @@ export default function PageTableauDeBord() {
       unites: lireListe(clesStockage.unites),
       locataires: lireListe(clesStockage.locataires),
       baux: lireListe(clesStockage.baux)
-    });
-    setInitialise(true);
+    }); setInitialise(true);
   }, []);
 
   const indicateurs = useMemo(() => {
-    const bauxActifs = nombreAvecStatut(donnees.baux, "Actif");
     const unitesOccupees = nombreAvecStatut(donnees.unites, "Occupée");
     const unitesDisponibles = nombreAvecStatut(donnees.unites, "Disponible");
     const locatairesActifs = nombreAvecStatut(donnees.locataires, "Actif");
