@@ -23,6 +23,7 @@ export default function PageRapports(){
  useEffect(()=>{
   try{
    const lire=<T,>(cle:string,defaut:T):T=>{const brut=localStorage.getItem(cle);if(!brut)return defaut;const v:unknown=JSON.parse(brut);return Array.isArray(v)?v as T:defaut;};
+   // eslint-disable-next-line react-hooks/set-state-in-effect -- Lecture initiale du stockage navigateur après hydratation.
    setDonnees({immeubles:lire("cofis_demo_immeubles_v1",exemples.immeubles),unites:lire("cofis_demo_unites_v1",exemples.unites),locataires:lire("cofis_demo_locataires_v1",exemples.locataires),baux:lire("cofis_demo_baux_v1",exemples.baux)});
   }catch{/* Garder les exemples en cas de stockage illisible. */}finally{setPret(true);}
  },[]);
