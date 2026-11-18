@@ -58,7 +58,6 @@ export default function PageUnites() {
       }
       if (stockImmeubles) {
         const parsed: unknown = JSON.parse(stockImmeubles);
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
         if (Array.isArray(parsed) && parsed.length) setImmeubles(parsed as Immeuble[]);
       }
     } catch {
