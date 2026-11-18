@@ -13,6 +13,12 @@ Dernière mise à jour : 18 novembre 2026
 - Aucune session Auth réelle ni protection de routes activée.
 - Modèle d'identité et matrice de rôles proposés dans `docs/MODELE_AUTORISATION_PROPOSE.md` ; droits détaillés non approuvés.
 
+## Navigation adaptative
+
+- La navigation mobile est disponible depuis l'en-tête sur les petits écrans ; les liens actifs sont signalés et le menu se referme après sélection.
+- La navigation latérale de bureau reste inchangée.
+- Les modules non implémentés restent explicitement indiqués comme à venir ; aucune fonctionnalité métier n'est simulée comme active.
+
 ## Modules de démonstration présents
 
 | Module | Fonctionnalités |
