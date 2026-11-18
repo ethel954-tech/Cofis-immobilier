@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import {
   ArrowDownUp,
   Building2,
@@ -81,7 +81,7 @@ export default function PageProprietaires() {
     setModalOuvert(true);
   };
 
-  const enregistrer = (evenement: React.FormEvent<HTMLFormElement>) => {
+  const enregistrer = (evenement: FormEvent<HTMLFormElement>) => {
     evenement.preventDefault();
     if (editionId !== null) {
       setProprietaires((liste) => liste.map((element) => element.id === editionId ? { ...element, ...formulaire } : element));
