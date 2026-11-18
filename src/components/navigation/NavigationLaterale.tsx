@@ -36,7 +36,7 @@ const elements: ElementNavigation[] = [
   { libelle: "Impayés", icone: BarChart3, groupe: "Finance" },
   { libelle: "Dépenses", icone: Wallet, groupe: "Finance" },
   { libelle: "Reversements", icone: ArrowLeftRight, groupe: "Finance" },
-  { libelle: "Rapports", icone: BarChart3, groupe: "Pilotage" },
+  { libelle: "Rapports", icone: BarChart3, href: "/rapports", groupe: "Pilotage" },
   { libelle: "Paramètres", icone: Settings2, groupe: "Administration" }
 ];
 
