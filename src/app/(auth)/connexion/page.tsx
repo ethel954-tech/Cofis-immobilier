@@ -1,3 +1,4 @@
+/* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
 import Link from "next/link";
 import { ArrowLeft, Building2, LockKeyhole, ShieldCheck } from "lucide-react";
 
