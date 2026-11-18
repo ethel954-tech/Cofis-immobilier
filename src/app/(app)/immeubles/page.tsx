@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
+
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Building2, CirclePlus, MapPin, Pencil, Search, X, Users, Home, Layers3 } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
@@ -28,7 +30,7 @@ const immeublesExemple: Immeuble[] = [
   { id: 102, nom: "Immeuble Bonapriso", type: "Mixte", adresse: "Rue Koloko, Bonapriso", ville: "Douala", proprietaireId: 2, nombreUnites: 8, statut: "Actif" },
   { id: 103, nom: "Centre commercial Étoile", type: "Commercial", adresse: "Avenue Kennedy", ville: "Yaoundé", proprietaireId: 2, nombreUnites: 15, statut: "Actif" },
 ];
-const formulaireVide = { nom: "", type: "Résidentiel" as TypeBien, adresse: "", ville: "", proprietaireId: "", nombreUnites: "1", statut: "Actif" as const };
+const formulaireVide = { nom: "", type: "Résidentiel" as TypeBien, adresse: "", ville: "", proprietaireId: "", nombreUnites: "1", statut: "Actif" as Immeuble["statut"] };
 
 export default function PageImmeubles() {
   const [immeubles, setImmeubles] = useState<Immeuble[]>(immeublesExemple);
@@ -46,10 +48,12 @@ export default function PageImmeubles() {
       const proprietairesStockes = localStorage.getItem(CLE_PROPRIETAIRES);
       if (biensStockes) {
         const parsed: unknown = JSON.parse(biensStockes);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
         if (Array.isArray(parsed)) setImmeubles(parsed as Immeuble[]);
       }
       if (proprietairesStockes) {
         const parsed: unknown = JSON.parse(proprietairesStockes);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
         if (Array.isArray(parsed) && parsed.length) setProprietaires(parsed as Proprietaire[]);
       }
     } catch {
