@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   ArrowLeftRight,
   Building2,
@@ -25,7 +26,7 @@ type ElementNavigation = {
 
 const elements: ElementNavigation[] = [
   { libelle: "Vue d'ensemble", icone: LayoutDashboard, href: "/dashboard", groupe: "Général" },
-  { libelle: "Propriétaires", icone: Users, href: "/proprietaires", actif: true, groupe: "Patrimoine" },
+  { libelle: "Propriétaires", icone: Users, href: "/proprietaires", groupe: "Patrimoine" },
   { libelle: "Immeubles", icone: Building2, groupe: "Patrimoine" },
   { libelle: "Unités / Logements", icone: Building2, groupe: "Patrimoine" },
   { libelle: "Locataires", icone: Users, groupe: "Location" },
@@ -42,6 +43,8 @@ const elements: ElementNavigation[] = [
 const groupes = [...new Set(elements.map((element) => element.groupe))];
 
 export function NavigationLaterale() {
+  const cheminActuel = usePathname();
+
   return (
     <aside className="flex h-full w-[264px] shrink-0 flex-col border-r border-slate-200/80 bg-white">
       <Link href="/dashboard" className="flex h-[82px] items-center gap-3 border-b border-slate-100 px-6">
@@ -59,7 +62,8 @@ export function NavigationLaterale() {
             <div className="space-y-1">
               {elements.filter((element) => element.groupe === groupe).map((element) => {
                 const Icone = element.icone;
-                const classes = element.actif ? "bg-blue-50 text-blue-700 font-semibold" : "text-slate-400 font-medium";
+                const estActif = element.href === cheminActuel;
+                const classes = estActif ? "bg-blue-50 text-blue-700 font-semibold" : "text-slate-500 font-medium";
                 const contenu = (
                   <>
                     <Icone size={17} strokeWidth={1.8} />
@@ -69,7 +73,7 @@ export function NavigationLaterale() {
                 );
 
                 return element.href ? (
-                  <Link key={element.libelle} href={element.href} aria-current={element.actif ? "page" : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] transition hover:bg-blue-50 hover:text-blue-700 ${classes}`}>
+                  <Link key={element.libelle} href={element.href} aria-current={estActif ? "page" : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] transition hover:bg-blue-50 hover:text-blue-700 ${classes}`}>
                     {contenu}
                   </Link>
                 ) : (
