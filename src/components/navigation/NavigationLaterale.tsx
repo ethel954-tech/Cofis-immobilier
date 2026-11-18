@@ -30,7 +30,7 @@ const elements: ElementNavigation[] = [
   { libelle: "Immeubles", icone: Building2, href: "/immeubles", groupe: "Patrimoine" },
   { libelle: "Unités / Logements", icone: Building2, href: "/unites", groupe: "Patrimoine" },
   { libelle: "Locataires", icone: Users, href: "/locataires", groupe: "Location" },
-  { libelle: "Baux", icone: FileText, groupe: "Location" },
+  { libelle: "Baux", icone: FileText, href: "/baux", groupe: "Location" },
   { libelle: "Échéances", icone: ClipboardList, groupe: "Finance" },
   { libelle: "Paiements", icone: CreditCard, groupe: "Finance" },
   { libelle: "Impayés", icone: BarChart3, groupe: "Finance" },
