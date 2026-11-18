@@ -9,6 +9,8 @@ Dernière mise à jour : 18 novembre 2026
 - Aucun déploiement effectué.
 - Aucun projet Supabase partagé connecté ou modifié.
 - Aucune migration appliquée à une base partagée.
+- Clients Supabase navigateur/serveur préparés sur `development`, mais non appelés par les pages.
+- Aucune session Auth réelle ni protection de routes activée.
 
 ## Modules de démonstration présents
 
@@ -43,6 +45,14 @@ Les éléments suivants restent à confirmer avant toute automatisation ou migra
 - Paiements partiels, paiements non affectés, trop-perçus, annulations et remboursements.
 - Formule de calcul des reversements propriétaires, retenues et commissions.
 - Rôle de COFIS dans la détention et le transfert des fonds encaissés.
+
+## Intégration Supabase préparée
+
+- `src/lib/supabase/configuration.ts` valide les variables publiques et refuse une configuration partielle.
+- `src/lib/supabase/client-navigateur.ts` utilise uniquement la clé publique/anon.
+- `src/lib/supabase/client-serveur.ts` est protégé par `server-only` et utilise les cookies Next.js.
+- Aucun client `service_role` n'est fourni et aucune page n'appelle ces clients.
+- La revue de sécurité et les conditions d'activation sont détaillées dans `docs/REVUE_INTEGRATION_SUPABASE.md`.
 
 ## Prochain lot technique
 
