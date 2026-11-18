@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
+
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   ArrowDownUp,
@@ -57,6 +59,7 @@ export default function PageProprietaires() {
       if (donneesEnregistrees) {
         const proprietairesEnregistres: unknown = JSON.parse(donneesEnregistrees);
         if (Array.isArray(proprietairesEnregistres)) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
           setProprietaires(proprietairesEnregistres as Proprietaire[]);
         }
       }
