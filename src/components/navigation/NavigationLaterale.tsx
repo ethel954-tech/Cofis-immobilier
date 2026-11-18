@@ -27,7 +27,7 @@ type ElementNavigation = {
 const elements: ElementNavigation[] = [
   { libelle: "Vue d'ensemble", icone: LayoutDashboard, href: "/dashboard", groupe: "Général" },
   { libelle: "Propriétaires", icone: Users, href: "/proprietaires", groupe: "Patrimoine" },
-  { libelle: "Immeubles", icone: Building2, groupe: "Patrimoine" },
+  { libelle: "Immeubles", icone: Building2, href: "/immeubles", groupe: "Patrimoine" },
   { libelle: "Unités / Logements", icone: Building2, groupe: "Patrimoine" },
   { libelle: "Locataires", icone: Users, groupe: "Location" },
   { libelle: "Baux", icone: FileText, groupe: "Location" },
