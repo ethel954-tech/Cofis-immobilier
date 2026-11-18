@@ -1,3 +1,4 @@
+/* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
 import { Building2, CreditCard, FileText, Users, Wallet, ArrowUpRight, Clock3, CircleAlert } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 
