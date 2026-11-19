@@ -29,8 +29,8 @@ Dernière mise à jour : 19 novembre 2026
 | Unités / logements | Répertoire, rattachement à un immeuble, recherche, filtres, création, édition et suppression |
 | Locataires | Répertoire des particuliers et entreprises, recherche, filtres, création, édition et suppression |
 | Baux | Liaison locataire–unité, dates, loyer saisi, dépôt saisi, statut déclaratif, notes, recherche et filtres |
-| Paiements | Registre local append-only, référence unique, rattachement à un bail, date, montant entier FCFA, mode et référence externe ; recherche, filtre par période et export CSV filtré ; aucune affectation automatique |
-| Dépenses | Registre local append-only, référence unique, date, catégorie, description, fournisseur, montant entier FCFA, référence de justificatif, recherche, filtre par période et export CSV filtré |
+| Paiements | Registre local append-only, référence unique, rattachement à un bail, date, montant entier FCFA, mode et référence externe ; recherche, filtre par période, total de la sélection et export CSV filtré ; aucune affectation automatique |
+| Dépenses | Registre local append-only, référence unique, date, catégorie, description, fournisseur, montant entier FCFA, référence de justificatif, recherche, filtre par période, total de la sélection et export CSV filtré |
 | Rapports | Indicateurs de structure et export CSV de synthèse |
 
 ## Limites connues
@@ -40,7 +40,7 @@ Dernière mise à jour : 19 novembre 2026
 - Les fiches de démonstration ne doivent pas contenir de données personnelles ou contractuelles réelles.
 - Les valeurs de loyer et de dépôt affichées dans les modules ne sont pas des écritures comptables, encaissements ou soldes.
 - Les rapports ne sont pas des rapports comptables ou financiers officiels.
-- Les registres de paiements et dépenses sont des prototypes locaux append-only ; ils ne sont ni partagés ni persistants côté serveur.\n- Les exports CSV des registres financiers ne contiennent que les lignes actuellement filtrées ; ils utilisent un séparateur point-virgule, un BOM UTF-8 et une protection contre les formules de tableur. Ils restent des exports de démonstration, pas des pièces comptables.
+- Les registres de paiements et dépenses sont des prototypes locaux append-only ; ils ne sont ni partagés ni persistants côté serveur.\n- Les exports CSV des registres financiers ne contiennent que les lignes actuellement filtrées ; ils utilisent un utilitaire partagé, un séparateur point-virgule, un BOM UTF-8 et une protection contre les formules de tableur. Le même utilitaire est utilisé pour les propriétaires et les rapports. Les totaux affichés dans les registres suivent les filtres actifs et restent des montants déclarés de démonstration, pas des pièces comptables.
 - Les paiements ne sont pas affectés aux échéances ; aucun solde ou impayé n’est calculé.
 - Les dépenses ne sont pas approuvées, payées ou imputées à un bien ; elles ne sont pas déduites d’un reversement.
 - Le tableau de bord lit les listes enregistrées localement ; il ne synchronise pas automatiquement les changements effectués dans un autre onglet déjà ouvert.
