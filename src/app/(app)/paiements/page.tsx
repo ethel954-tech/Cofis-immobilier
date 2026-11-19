@@ -3,7 +3,8 @@
 /* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { CirclePlus, Search, X, ReceiptText, WalletCards } from "lucide-react";
+import { CirclePlus, Search, X, ReceiptText, WalletCards, Download } from "lucide-react";
+import { exporterCsv } from "@/lib/export/csv";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 
 type Bail = { id: number; reference: string; locataireId: number; uniteId: number; loyerMensuel: number; statut: string };
@@ -102,6 +103,18 @@ export default function PagePaiements() {
 
   const totalEnregistre = paiements.reduce((total, paiement) => total + paiement.montant, 0);
 
+  const exporterPaiements = () => {
+    exporterCsv({
+      nomFichier: "cofis-paiements-demo.csv",
+      entetes: ["Référence", "Date déclarée", "Référence du bail", "Locataire", "Unité", "Mode déclaré", "Montant consigné (FCFA)", "Référence externe", "Observation"],
+      lignes: paiementsFiltres.map((paiement) => [
+        paiement.reference, paiement.datePaiement, referenceBail(paiement.bailId),
+        nomLocataire(paiement.bailId), referenceUnite(paiement.bailId), paiement.mode,
+        paiement.montant, paiement.referenceExterne, paiement.observation
+      ])
+    });
+  };
+
   const enregistrer = (evenement: FormEvent<HTMLFormElement>) => {
     evenement.preventDefault();
     setErreur("");
@@ -157,7 +170,7 @@ export default function PagePaiements() {
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div><h3 className="text-sm font-bold text-slate-900">Historique des paiements</h3><p className="mt-1 text-xs text-slate-400">{paiementsFiltres.length} écriture(s)</p></div>
-          <div className="relative w-full sm:max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Référence, bail, locataire, mode..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none focus:border-blue-400 focus:bg-white" /></div>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center"><button type="button" onClick={exporterPaiements} disabled={!initialise || paiementsFiltres.length === 0} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40" title="Exporter les paiements actuellement filtrés au format CSV"><Download size={14} /> Exporter CSV</button><div className="relative w-full sm:w-72"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Référence, bail, locataire, mode..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none focus:border-blue-400 focus:bg-white" /></div></div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[850px] text-left">
