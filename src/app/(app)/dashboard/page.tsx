@@ -80,7 +80,9 @@ export default function PageTableauDeBord() {
       unites: lireListe(clesStockage.unites),
       locataires: lireListe(clesStockage.locataires),
       baux: lireListe(clesStockage.baux)
-    });\n    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fin de l’hydratation locale.\n    setInitialise(true);
+    });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fin de l’hydratation locale.
+    setInitialise(true);
   }, []);
 
   const indicateurs = useMemo(() => {
