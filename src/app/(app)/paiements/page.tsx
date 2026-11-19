@@ -79,6 +79,7 @@ export default function PagePaiements() {
     setBaux(lire(CLE_BAUX, bauxExemple));
     setLocataires(lire(CLE_LOCATAIRES, locatairesExemple));
     setUnites(lire(CLE_UNITES, unitesExemple));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fin de l’hydratation locale.
     setInitialise(true);
   }, []);
 
