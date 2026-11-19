@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Building2, Download, FileText, Home, Users } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
+import { exporterCsv } from "@/lib/export/csv";
 
 type Immeuble={id:number;nom:string;ville:string;statut?:string};
 type Unite={id:number;reference:string;immeubleId:number;type:string;loyerMensuel:number;statut:string};
@@ -40,10 +41,22 @@ export default function PageRapports(){
   };
  },[donnees]);
  const exporter=()=>{
-  const lignes=[["Indicateur","Valeur"],["Immeubles",stats.immeubles],["Unités",stats.unites],["Unités disponibles",stats.disponibles],["Unités occupées (statut déclaré)",stats.occupees],["Unités en maintenance",stats.maintenance],["Locataires",stats.locataires],["Baux",stats.baux],["Baux actifs (statut déclaré)",stats.bauxActifs],["Baux brouillons",stats.brouillons],["Somme des loyers mensuels des baux actifs (FCFA)",stats.loyersActifs]];
-  const csv="\uFEFF"+lignes.map(l=>l.map(v=>`"${String(v).replaceAll('"','""')}"`).join(";")).join("\r\n");
-  const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
-  const lien=document.createElement("a");lien.href=url;lien.download="cofis-rapport-demo.csv";lien.click();URL.revokeObjectURL(url);
+  exporterCsv({
+   nomFichier:"cofis-rapport-demo.csv",
+   entetes:["Indicateur","Valeur"],
+   lignes:[
+    ["Immeubles",stats.immeubles],
+    ["Unités",stats.unites],
+    ["Unités disponibles",stats.disponibles],
+    ["Unités occupées (statut déclaré)",stats.occupees],
+    ["Unités en maintenance",stats.maintenance],
+    ["Locataires",stats.locataires],
+    ["Baux",stats.baux],
+    ["Baux actifs (statut déclaré)",stats.bauxActifs],
+    ["Baux brouillons",stats.brouillons],
+    ["Somme des loyers mensuels des baux actifs (FCFA)",stats.loyersActifs]
+   ]
+  });
  };
  const carte=(titre:string,valeur:number,description:string,Icone:typeof Building2)=><article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between text-xs font-medium text-slate-500"><span>{titre}</span><Icone size={19} className="text-blue-600"/></div><p className="mt-4 text-3xl font-bold text-slate-900">{pret?formatNombre(valeur):"—"}</p><p className="mt-1 text-xs text-slate-400">{description}</p></article>;
  return <CadreApplication><div className="space-y-6">
