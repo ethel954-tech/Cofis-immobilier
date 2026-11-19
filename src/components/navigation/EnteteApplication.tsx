@@ -28,6 +28,8 @@ const liensMobiles = [
   { libelle: "Unités / Logements", href: "/unites", groupe: "Patrimoine" },
   { libelle: "Locataires", href: "/locataires", groupe: "Location" },
   { libelle: "Baux", href: "/baux", groupe: "Location" },
+  { libelle: "Paiements", href: "/paiements", groupe: "Finance" },
+  { libelle: "Dépenses", href: "/depenses", groupe: "Finance" },
   { libelle: "Rapports", href: "/rapports", groupe: "Pilotage" },
 ];
 
