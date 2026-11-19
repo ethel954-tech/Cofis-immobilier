@@ -20,6 +20,7 @@ import {
   X
 } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
+import { exporterCsv as exporterCsvCommun } from "@/lib/export/csv";
 
 type TypeProprietaire = "Particulier" | "Société";
 
@@ -113,30 +114,18 @@ export default function PageProprietaires() {
   };
 
   const exporterCsv = () => {
-    const colonnes = ["Nom", "Type", "Téléphone", "E-mail", "Ville", "Nombre de biens"];
-    const lignes = proprietairesFiltres.map((proprietaire) => [
-      proprietaire.nom,
-      proprietaire.type,
-      proprietaire.telephone,
-      proprietaire.email,
-      proprietaire.ville,
-      proprietaire.biens
-    ]);
-    const protegerCellule = (valeur: string | number) => {
-      const texte = String(valeur);
-      const securise = /^[\s]*[=+@-]/.test(texte) ? `'${texte}` : texte;
-      return `"${securise.replaceAll('"', '""')}"`;
-    };
-    const contenu = "\uFEFF" + [colonnes, ...lignes]
-      .map((ligne) => ligne.map(protegerCellule).join(";"))
-      .join("\r\n");
-    const fichier = new Blob([contenu], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(fichier);
-    const lien = document.createElement("a");
-    lien.href = url;
-    lien.download = "cofis-proprietaires-demo.csv";
-    lien.click();
-    URL.revokeObjectURL(url);
+    exporterCsvCommun({
+      nomFichier: "cofis-proprietaires-demo.csv",
+      entetes: ["Nom", "Type", "Téléphone", "E-mail", "Ville", "Nombre de biens"],
+      lignes: proprietairesFiltres.map((proprietaire) => [
+        proprietaire.nom,
+        proprietaire.type,
+        proprietaire.telephone,
+        proprietaire.email,
+        proprietaire.ville,
+        proprietaire.biens
+      ])
+    });
   };
 
   const enregistrer = (evenement: FormEvent<HTMLFormElement>) => {
