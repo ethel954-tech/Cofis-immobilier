@@ -1,7 +1,9 @@
 "use client";
 
+/* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
+
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Wallet, CirclePlus, Search, X, Receipt, ClipboardList } from "lucide-react";
+import { CirclePlus, Search, X, Receipt, ClipboardList } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 
 type Depense = {
