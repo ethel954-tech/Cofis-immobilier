@@ -53,6 +53,7 @@ export default function PageDepenses() {
         if (Array.isArray(valeur)) setDepenses(valeur as Depense[]);
       }
     } catch { /* Conserver les exemples si le stockage est illisible. */ }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fin de l’hydratation locale.
     setInitialise(true);
   }, []);
 
