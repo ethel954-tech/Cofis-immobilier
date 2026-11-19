@@ -112,6 +112,33 @@ export default function PageProprietaires() {
     setModalOuvert(true);
   };
 
+  const exporterCsv = () => {
+    const colonnes = ["Nom", "Type", "Téléphone", "E-mail", "Ville", "Nombre de biens"];
+    const lignes = proprietairesFiltres.map((proprietaire) => [
+      proprietaire.nom,
+      proprietaire.type,
+      proprietaire.telephone,
+      proprietaire.email,
+      proprietaire.ville,
+      proprietaire.biens
+    ]);
+    const protegerCellule = (valeur: string | number) => {
+      const texte = String(valeur);
+      const securise = /^[\\s]*[=+@-]/.test(texte) ? `'${texte}` : texte;
+      return `"${securise.replaceAll('"', '""')}"`;
+    };
+    const contenu = "\\uFEFF" + [colonnes, ...lignes]
+      .map((ligne) => ligne.map(protegerCellule).join(";"))
+      .join("\\r\\n");
+    const fichier = new Blob([contenu], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(fichier);
+    const lien = document.createElement("a");
+    lien.href = url;
+    lien.download = "cofis-proprietaires-demo.csv";
+    lien.click();
+    URL.revokeObjectURL(url);
+  };
+
   const enregistrer = (evenement: FormEvent<HTMLFormElement>) => {
     evenement.preventDefault();
     if (editionId !== null) {
@@ -158,7 +185,7 @@ export default function PageProprietaires() {
         <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4 sm:p-5">
             <div><h3 className="text-sm font-bold text-slate-900">Répertoire des propriétaires</h3><p className="mt-1 text-xs text-slate-400">{proprietairesFiltres.length} résultat(s)</p></div>
-            <button type="button" disabled className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-400" title="Disponible après connexion des données"><Download size={14} /> Exporter</button>
+            <button type="button" onClick={exporterCsv} disabled={proprietairesFiltres.length === 0} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40" title="Exporter la liste actuellement filtrée au format CSV"><Download size={14} /> Exporter CSV</button>
           </div>
           <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Rechercher un nom, e-mail, téléphone..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-50" /></div>
