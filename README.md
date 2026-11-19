@@ -13,10 +13,10 @@ Le développement fonctionnel se poursuit sur la branche `development`. La branc
 - Gestion des immeubles et rattachement aux propriétaires.
 - Gestion des unités / logements et rattachement aux immeubles.
 - Répertoire des locataires.
-- Registre des baux et rattachement locataire–unité.
+- Registre des baux et rattachement locataire–unité.\n- Registre de démonstration des paiements (sans affectation aux échéances).\n- Registre de démonstration des dépenses (sans validation comptable).
 - Rapports synthétiques et export CSV du résumé.
 
-Les modules de démonstration utilisent le stockage local du navigateur. Les données d'exemple sont fictives, ne sont pas partagées entre utilisateurs et ne constituent pas des données métier persistantes. Ne pas y saisir de données personnelles, pièces d'identité ou contrats réels.
+Les modules de démonstration utilisent le stockage local du navigateur, y compris les registres financiers expérimentaux. Les données d'exemple sont fictives, ne sont pas partagées entre utilisateurs et ne constituent pas des données métier persistantes. Ne pas y saisir de données personnelles, pièces d'identité ou contrats réels.
 
 ## Technologie prévue
 
