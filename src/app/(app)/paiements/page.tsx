@@ -1,0 +1,193 @@
+"use client";
+
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { CreditCard, CirclePlus, Search, X, ReceiptText, WalletCards } from "lucide-react";
+import { CadreApplication } from "@/components/layout/CadreApplication";
+
+type Bail = { id: number; reference: string; locataireId: number; uniteId: number; loyerMensuel: number; statut: string };
+type Locataire = { id: number; nom: string };
+type Unite = { id: number; reference: string };
+type Paiement = {
+  id: number;
+  reference: string;
+  bailId: number;
+  datePaiement: string;
+  montant: number;
+  mode: string;
+  referenceExterne: string;
+  observation: string;
+};
+type FormulairePaiement = Omit<Paiement, "id">;
+
+const CLE_PAIEMENTS = "cofis_demo_paiements_v1";
+const CLE_BAUX = "cofis_demo_baux_v1";
+const CLE_LOCATAIRES = "cofis_demo_locataires_v1";
+const CLE_UNITES = "cofis_demo_unites_v1";
+const bauxExemple: Bail[] = [
+  { id: 401, reference: "BAIL-2026-001", locataireId: 301, uniteId: 201, loyerMensuel: 175000, statut: "Actif" },
+  { id: 402, reference: "BAIL-2026-002", locataireId: 302, uniteId: 205, loyerMensuel: 225000, statut: "Brouillon" }
+];
+const locatairesExemple: Locataire[] = [
+  { id: 301, nom: "Exemple — Alice Tchoumi" },
+  { id: 302, nom: "Exemple — Cabinet Horizon" }
+];
+const unitesExemple: Unite[] = [
+  { id: 201, reference: "LM-A01" },
+  { id: 205, reference: "CE-B01" }
+];
+const paiementsExemple: Paiement[] = [
+  { id: 501, reference: "PAY-DEMO-001", bailId: 401, datePaiement: "2026-11-05", montant: 175000, mode: "Virement bancaire", referenceExterne: "VIR-DEMO-0511", observation: "Exemple fictif de paiement enregistré." },
+  { id: 502, reference: "PAY-DEMO-002", bailId: 401, datePaiement: "2026-10-05", montant: 100000, mode: "Mobile Money", referenceExterne: "", observation: "Exemple fictif — aucun rapprochement effectué." }
+];
+const aujourdHui = () => {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+};
+const formulaireVide = (): FormulairePaiement => ({
+  reference: "",
+  bailId: 0,
+  datePaiement: aujourdHui(),
+  montant: 0,
+  mode: "Espèces",
+  referenceExterne: "",
+  observation: ""
+});
+const formatMontant = (valeur: number) => `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(valeur)} FCFA`;
+
+export default function PagePaiements() {
+  const [paiements, setPaiements] = useState<Paiement[]>(paiementsExemple);
+  const [baux, setBaux] = useState<Bail[]>(bauxExemple);
+  const [locataires, setLocataires] = useState<Locataire[]>(locatairesExemple);
+  const [unites, setUnites] = useState<Unite[]>(unitesExemple);
+  const [initialise, setInitialise] = useState(false);
+  const [recherche, setRecherche] = useState("");
+  const [modalOuvert, setModalOuvert] = useState(false);
+  const [formulaire, setFormulaire] = useState<FormulairePaiement>(formulaireVide());
+  const [erreur, setErreur] = useState("");
+
+  useEffect(() => {
+    const lire = <T,>(cle: string, defaut: T): T => {
+      try {
+        const brut = localStorage.getItem(cle);
+        if (!brut) return defaut;
+        const valeur: unknown = JSON.parse(brut);
+        return Array.isArray(valeur) ? valeur as T : defaut;
+      } catch { return defaut; }
+    };
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation initiale des registres de démonstration.
+    setPaiements(lire(CLE_PAIEMENTS, paiementsExemple));
+    setBaux(lire(CLE_BAUX, bauxExemple));
+    setLocataires(lire(CLE_LOCATAIRES, locatairesExemple));
+    setUnites(lire(CLE_UNITES, unitesExemple));
+    setInitialise(true);
+  }, []);
+
+  useEffect(() => {
+    if (!initialise) return;
+    try { localStorage.setItem(CLE_PAIEMENTS, JSON.stringify(paiements)); } catch { /* Stockage local indisponible. */ }
+  }, [paiements, initialise]);
+
+  const paiementsFiltres = useMemo(() => {
+    const terme = recherche.trim().toLocaleLowerCase("fr");
+    return paiements.filter((paiement) => {
+      const bail = baux.find((element) => element.id === paiement.bailId);
+      const locataire = bail ? locataires.find((element) => element.id === bail.locataireId) : undefined;
+      return !terme || [paiement.reference, paiement.mode, paiement.referenceExterne, bail?.reference ?? "", locataire?.nom ?? ""]
+        .some((valeur) => valeur.toLocaleLowerCase("fr").includes(terme));
+    }).sort((a, b) => b.datePaiement.localeCompare(a.datePaiement));
+  }, [paiements, baux, locataires, recherche]);
+
+  const totalEnregistre = paiements.reduce((total, paiement) => total + paiement.montant, 0);
+
+  const enregistrer = (evenement: FormEvent<HTMLFormElement>) => {
+    evenement.preventDefault();
+    setErreur("");
+    const reference = formulaire.reference.trim();
+    if (!reference || !formulaire.bailId || !formulaire.datePaiement || !Number.isSafeInteger(formulaire.montant) || formulaire.montant <= 0) {
+      setErreur("Renseignez une référence, un bail, une date et un montant entier strictement positif.");
+      return;
+    }
+    if (paiements.some((paiement) => paiement.reference.toLocaleLowerCase("fr") === reference.toLocaleLowerCase("fr"))) {
+      setErreur("Cette référence de paiement existe déjà dans le registre.");
+      return;
+    }
+    if (!baux.some((bail) => bail.id === formulaire.bailId)) {
+      setErreur("Le bail sélectionné n'existe plus dans les données locales.");
+      return;
+    }
+    setPaiements((liste) => [{ ...formulaire, id: Date.now(), reference }, ...liste]);
+    setModalOuvert(false);
+    setFormulaire(formulaireVide());
+  };
+
+  const nomLocataire = (bailId: number) => {
+    const bail = baux.find((element) => element.id === bailId);
+    return bail ? locataires.find((element) => element.id === bail.locataireId)?.nom ?? "Locataire non trouvé" : "Bail non trouvé";
+  };
+  const referenceBail = (bailId: number) => baux.find((element) => element.id === bailId)?.reference ?? "—";
+  const referenceUnite = (bailId: number) => {
+    const bail = baux.find((element) => element.id === bailId);
+    return bail ? unites.find((element) => element.id === bail.uniteId)?.reference ?? "—" : "—";
+  };
+
+  return <CadreApplication>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="mb-2 flex items-center gap-2 text-xs text-slate-400"><span>Espace de travail</span><span>/</span><span>Finance</span><span>/</span><span className="font-medium text-slate-600">Paiements</span></div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Registre des paiements</h2>
+          <p className="mt-1 text-sm text-slate-500">Consignez les paiements reçus et conservez leurs références.</p>
+        </div>
+        <button type="button" onClick={() => { setErreur(""); setFormulaire(formulaireVide()); setModalOuvert(true); }} disabled={baux.length === 0} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"><CirclePlus size={17} /> Enregistrer un paiement</button>
+      </div>
+
+      <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
+        <p className="text-xs font-semibold text-amber-900">Registre de démonstration — données locales uniquement</p>
+        <p className="mt-1 text-[11px] leading-5 text-amber-800">Un paiement enregistré n'est pas automatiquement affecté à une échéance. Aucun solde, impayé, remboursement, reversement ou rapprochement bancaire n'est calculé. N'utilisez pas de données financières réelles ici.</p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between text-xs font-medium text-slate-500"><span>Écritures de paiement enregistrées</span><ReceiptText size={19} className="text-blue-600" /></div><p className="mt-4 text-3xl font-bold text-slate-900">{initialise ? paiements.length : "—"}</p><p className="mt-1 text-xs text-slate-400">Nombre d'entrées dans ce registre local</p></article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between text-xs font-medium text-slate-500"><span>Montant total consigné</span><WalletCards size={19} className="text-indigo-600" /></div><p className="mt-4 text-2xl font-bold text-slate-900">{initialise ? formatMontant(totalEnregistre) : "—"}</p><p className="mt-1 text-xs text-slate-400">Somme des montants saisis, sans allocation ni rapprochement</p></article>
+      </div>
+
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div><h3 className="text-sm font-bold text-slate-900">Historique des paiements</h3><p className="mt-1 text-xs text-slate-400">{paiementsFiltres.length} écriture(s)</p></div>
+          <div className="relative w-full sm:max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Référence, bail, locataire, mode..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none focus:border-blue-400 focus:bg-white" /></div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[850px] text-left">
+            <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400"><tr><th className="px-5 py-3">Référence / date</th><th className="px-4 py-3">Locataire / bail</th><th className="px-4 py-3">Unité</th><th className="px-4 py-3">Mode</th><th className="px-5 py-3 text-right">Montant consigné</th></tr></thead>
+            <tbody className="divide-y divide-slate-100">
+              {paiementsFiltres.map((paiement) => <tr key={paiement.id} className="hover:bg-slate-50/70"><td className="px-5 py-4"><p className="text-xs font-semibold text-slate-800">{paiement.reference}</p><p className="mt-1 text-[10px] text-slate-400">{new Date(paiement.datePaiement + "T00:00:00").toLocaleDateString("fr-FR")}</p></td><td className="px-4 py-4"><p className="text-xs font-medium text-slate-700">{nomLocataire(paiement.bailId)}</p><p className="mt-1 text-[10px] text-slate-400">{referenceBail(paiement.bailId)}</p></td><td className="px-4 py-4 text-xs text-slate-600">{referenceUnite(paiement.bailId)}</td><td className="px-4 py-4"><p className="text-xs text-slate-700">{paiement.mode}</p>{paiement.referenceExterne && <p className="mt-1 text-[10px] text-slate-400">{paiement.referenceExterne}</p>}</td><td className="px-5 py-4 text-right text-xs font-bold tabular-nums text-slate-800">{formatMontant(paiement.montant)}</td></tr>)}
+              {paiementsFiltres.length === 0 && <tr><td colSpan={5} className="px-5 py-12 text-center text-xs text-slate-400">Aucun paiement ne correspond à votre recherche.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {modalOuvert && <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/40 p-4" role="presentation" onMouseDown={(evenement) => { if (evenement.target === evenement.currentTarget) setModalOuvert(false); }}>
+        <section role="dialog" aria-modal="true" aria-labelledby="titre-paiement" className="my-8 w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <div className="flex items-start justify-between border-b border-slate-100 p-5"><div><h3 id="titre-paiement" className="text-base font-bold text-slate-900">Enregistrer un paiement</h3><p className="mt-1 text-xs text-slate-500">Ajoutez une écriture au registre de démonstration.</p></div><button type="button" onClick={() => setModalOuvert(false)} aria-label="Fermer" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100"><X size={17} /></button></div>
+          <form onSubmit={enregistrer} className="space-y-4 p-5">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div><label htmlFor="reference-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Référence interne *</label><input id="reference-paiement" required value={formulaire.reference} onChange={(e) => setFormulaire({ ...formulaire, reference: e.target.value })} placeholder="PAY-2026-001" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
+              <div><label htmlFor="date-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Date de réception déclarée *</label><input id="date-paiement" type="date" required value={formulaire.datePaiement} onChange={(e) => setFormulaire({ ...formulaire, datePaiement: e.target.value })} className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
+            </div>
+            <div><label htmlFor="bail-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Bail associé *</label><select id="bail-paiement" required value={formulaire.bailId || ""} onChange={(e) => setFormulaire({ ...formulaire, bailId: Number(e.target.value) })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="">Sélectionner un bail</option>{baux.map((bail) => <option key={bail.id} value={bail.id}>{bail.reference} — {locataires.find((locataire) => locataire.id === bail.locataireId)?.nom ?? "Locataire"}</option>)}</select></div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div><label htmlFor="montant-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Montant consigné (FCFA) *</label><input id="montant-paiement" type="number" min="1" step="1" required value={formulaire.montant || ""} onChange={(e) => setFormulaire({ ...formulaire, montant: e.target.value === "" ? 0 : Number(e.target.value) })} placeholder="150000" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
+              <div><label htmlFor="mode-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Mode déclaré *</label><select id="mode-paiement" value={formulaire.mode} onChange={(e) => setFormulaire({ ...formulaire, mode: e.target.value })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option>Espèces</option><option>Virement bancaire</option><option>Chèque</option><option>Mobile Money</option><option>Autre</option></select></div>
+            </div>
+            <div><label htmlFor="reference-externe" className="mb-1.5 block text-xs font-semibold text-slate-700">Référence externe (facultatif)</label><input id="reference-externe" value={formulaire.referenceExterne} onChange={(e) => setFormulaire({ ...formulaire, referenceExterne: e.target.value })} placeholder="Référence du reçu ou de la transaction" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
+            <div><label htmlFor="observation-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Observation (facultatif)</label><textarea id="observation-paiement" rows={3} value={formulaire.observation} onChange={(e) => setFormulaire({ ...formulaire, observation: e.target.value })} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm" placeholder="Information complémentaire..." /></div>
+            {erreur && <p role="alert" className="rounded-xl bg-red-50 p-3 text-xs text-red-700">{erreur}</p>}
+            <p className="rounded-xl bg-slate-50 p-3 text-[10px] leading-5 text-slate-500">Cette entrée sera ajoutée au registre sans modification ni suppression dans cette démonstration. Aucune échéance n'est affectée automatiquement.</p>
+            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4"><button type="button" onClick={() => setModalOuvert(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600">Annuler</button><button type="submit" className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700">Consigner le paiement</button></div>
+          </form>
+        </section>
+      </div>}
+    </div>
+  </CadreApplication>;
+}
