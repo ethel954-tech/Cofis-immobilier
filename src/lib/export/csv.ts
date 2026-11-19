@@ -12,14 +12,14 @@ type OptionsExportCsv = {
 
 function protegerCellule(valeur: ValeurCsv): string {
   const texte = String(valeur ?? "");
-  const securise = /^[\\s]*[=+@-]/.test(texte) ? `'${texte}` : texte;
-  return `"${securise.replaceAll('"', '""')}"`;
+  const securise = /^[\s]*[=+@-]/.test(texte) ? \`'\${texte}\` : texte;
+  return \`"\${securise.replaceAll('"', '""')}"\`;
 }
 
 export function exporterCsv({ nomFichier, entetes, lignes }: OptionsExportCsv): void {
-  const contenu = "\\uFEFF" + [entetes, ...lignes]
+  const contenu = "\uFEFF" + [entetes, ...lignes]
     .map((ligne) => ligne.map(protegerCellule).join(";"))
-    .join("\\r\\n");
+    .join("\r\n");
   const fichier = new Blob([contenu], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(fichier);
   const lien = document.createElement("a");
