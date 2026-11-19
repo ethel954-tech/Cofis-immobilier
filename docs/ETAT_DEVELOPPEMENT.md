@@ -24,7 +24,7 @@ Dernière mise à jour : 19 novembre 2026
 | Module | Fonctionnalités |
 |---|---|
 | Tableau de bord | Compteurs issus des données locales des modules, suivi des dossiers et raccourcis ; aucune métrique financière simulée |
-| Propriétaires | Répertoire, recherche, création et édition, stockage local |
+| Propriétaires | Répertoire, recherche, création et édition, export CSV de la liste filtrée, stockage local |
 | Immeubles | Répertoire, rattachement à un propriétaire, création et édition |
 | Unités / logements | Répertoire, rattachement à un immeuble, recherche, filtres, création, édition et suppression |
 | Locataires | Répertoire des particuliers et entreprises, recherche, filtres, création, édition et suppression |
