@@ -32,9 +32,9 @@ const elements: ElementNavigation[] = [
   { libelle: "Locataires", icone: Users, href: "/locataires", groupe: "Location" },
   { libelle: "Baux", icone: FileText, href: "/baux", groupe: "Location" },
   { libelle: "Échéances", icone: ClipboardList, groupe: "Finance" },
-  { libelle: "Paiements", icone: CreditCard, groupe: "Finance" },
+  { libelle: "Paiements", icone: CreditCard, href: "/paiements", groupe: "Finance" },
   { libelle: "Impayés", icone: BarChart3, groupe: "Finance" },
-  { libelle: "Dépenses", icone: Wallet, groupe: "Finance" },
+  { libelle: "Dépenses", icone: Wallet, href: "/depenses", groupe: "Finance" },
   { libelle: "Reversements", icone: ArrowLeftRight, groupe: "Finance" },
   { libelle: "Rapports", icone: BarChart3, href: "/rapports", groupe: "Pilotage" },
   { libelle: "Paramètres", icone: Settings2, groupe: "Administration" }
