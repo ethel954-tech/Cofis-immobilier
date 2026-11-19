@@ -124,12 +124,12 @@ export default function PageProprietaires() {
     ]);
     const protegerCellule = (valeur: string | number) => {
       const texte = String(valeur);
-      const securise = /^[\\s]*[=+@-]/.test(texte) ? `'${texte}` : texte;
+      const securise = /^[\s]*[=+@-]/.test(texte) ? `'${texte}` : texte;
       return `"${securise.replaceAll('"', '""')}"`;
     };
-    const contenu = "\\uFEFF" + [colonnes, ...lignes]
+    const contenu = "\uFEFF" + [colonnes, ...lignes]
       .map((ligne) => ligne.map(protegerCellule).join(";"))
-      .join("\\r\\n");
+      .join("\r\n");
     const fichier = new Blob([contenu], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(fichier);
     const lien = document.createElement("a");
