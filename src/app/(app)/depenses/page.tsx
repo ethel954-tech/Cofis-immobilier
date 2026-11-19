@@ -43,6 +43,8 @@ export default function PageDepenses() {
   const [depenses, setDepenses] = useState<Depense[]>(depensesExemple);
   const [initialise, setInitialise] = useState(false);
   const [recherche, setRecherche] = useState("");
+  const [dateDebut, setDateDebut] = useState("");
+  const [dateFin, setDateFin] = useState("");
   const [modalOuvert, setModalOuvert] = useState(false);
   const [formulaire, setFormulaire] = useState<FormulaireDepense>(formulaireVide());
   const [erreur, setErreur] = useState("");
@@ -67,11 +69,13 @@ export default function PageDepenses() {
 
   const depensesFiltrees = useMemo(() => {
     const terme = recherche.trim().toLocaleLowerCase("fr");
-    return depenses.filter((depense) => !terme || [
-      depense.reference, depense.categorie, depense.description, depense.fournisseur, depense.referenceJustificatif
-    ].some((valeur) => valeur.toLocaleLowerCase("fr").includes(terme)))
-      .sort((a, b) => b.dateDepense.localeCompare(a.dateDepense));
-  }, [depenses, recherche]);
+    return depenses.filter((depense) => {
+      const correspondAuTerme = !terme || [
+        depense.reference, depense.categorie, depense.description, depense.fournisseur, depense.referenceJustificatif
+      ].some((valeur) => valeur.toLocaleLowerCase("fr").includes(terme));
+      return correspondAuTerme && (!dateDebut || depense.dateDepense >= dateDebut) && (!dateFin || depense.dateDepense <= dateFin);
+    }).sort((a, b) => b.dateDepense.localeCompare(a.dateDepense));
+  }, [depenses, recherche, dateDebut, dateFin]);
   const totalConsigne = depenses.reduce((total, depense) => total + depense.montant, 0);
 
   const exporterDepenses = () => {
@@ -126,7 +130,7 @@ export default function PageDepenses() {
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div><h3 className="text-sm font-bold text-slate-900">Historique des dépenses déclarées</h3><p className="mt-1 text-xs text-slate-400">{depensesFiltrees.length} écriture(s)</p></div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center"><button type="button" onClick={exporterDepenses} disabled={!initialise || depensesFiltrees.length === 0} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40" title="Exporter les dépenses actuellement filtrées au format CSV"><Download size={14} /> Exporter CSV</button><div className="relative w-full sm:w-72"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Référence, catégorie, fournisseur..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none focus:border-blue-400 focus:bg-white" /></div></div>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center"><button type="button" onClick={exporterDepenses} disabled={!initialise || depensesFiltrees.length === 0} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40" title="Exporter les dépenses actuellement filtrées au format CSV"><Download size={14} /> Exporter CSV</button><div className="relative w-full sm:w-72"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Référence, catégorie, fournisseur..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none focus:border-blue-400 focus:bg-white" /></div><div className="flex flex-wrap items-center gap-2"><label className="flex items-center gap-1.5 text-[10px] text-slate-500">Du <input type="date" aria-label="Date de début" value={dateDebut} max={dateFin || undefined} onChange={(e) => setDateDebut(e.target.value)} className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-[11px] text-slate-600" /></label><label className="flex items-center gap-1.5 text-[10px] text-slate-500">Au <input type="date" aria-label="Date de fin" value={dateFin} min={dateDebut || undefined} onChange={(e) => setDateFin(e.target.value)} className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-[11px] text-slate-600" /></label></div></div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[800px] text-left">
