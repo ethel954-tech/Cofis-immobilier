@@ -29,8 +29,8 @@ Dernière mise à jour : 19 novembre 2026
 | Unités / logements | Répertoire, rattachement à un immeuble, recherche, filtres, création, édition et suppression |
 | Locataires | Répertoire des particuliers et entreprises, recherche, filtres, création, édition et suppression |
 | Baux | Liaison locataire–unité, dates, loyer saisi, dépôt saisi, statut déclaratif, notes, recherche et filtres |
-| Paiements | Registre local append-only, référence unique, rattachement à un bail, date, montant entier FCFA, mode et référence externe ; recherche et export CSV filtré ; aucune affectation automatique |
-| Dépenses | Registre local append-only, référence unique, date, catégorie, description, fournisseur, montant entier FCFA, référence de justificatif, recherche et export CSV filtré |
+| Paiements | Registre local append-only, référence unique, rattachement à un bail, date, montant entier FCFA, mode et référence externe ; recherche, filtre par période et export CSV filtré ; aucune affectation automatique |
+| Dépenses | Registre local append-only, référence unique, date, catégorie, description, fournisseur, montant entier FCFA, référence de justificatif, recherche, filtre par période et export CSV filtré |
 | Rapports | Indicateurs de structure et export CSV de synthèse |
 
 ## Limites connues
