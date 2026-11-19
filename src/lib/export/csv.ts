@@ -12,8 +12,8 @@ type OptionsExportCsv = {
 
 function protegerCellule(valeur: ValeurCsv): string {
   const texte = String(valeur ?? "");
-  const securise = /^[\s]*[=+@-]/.test(texte) ? \`'\${texte}\` : texte;
-  return \`"\${securise.replaceAll('"', '""')}"\`;
+  const securise = /^[\s]*[=+@-]/.test(texte) ? "'" + texte : texte;
+  return '"' + securise.replaceAll('"', '""') + '"';
 }
 
 export function exporterCsv({ nomFichier, entetes, lignes }: OptionsExportCsv): void {
