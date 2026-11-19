@@ -65,6 +65,8 @@ const raccourcis = [
   { href: "/unites", titre: "Unités", description: "Gérer appartements et locaux", icone: Home },
   { href: "/locataires", titre: "Locataires", description: "Consulter les dossiers locataires", icone: Users },
   { href: "/baux", titre: "Baux", description: "Suivre les contrats déclarés", icone: FileText },
+  { href: "/paiements", titre: "Paiements", description: "Consulter le registre des paiements", icone: Wallet },
+  { href: "/depenses", titre: "Dépenses", description: "Consulter le registre des dépenses", icone: ClipboardList },
   { href: "/rapports", titre: "Rapports", description: "Consulter les synthèses de démonstration", icone: ClipboardList }
 ];
 
@@ -157,12 +159,12 @@ export default function PageTableauDeBord() {
               <span className="mt-0.5 rounded-xl bg-amber-50 p-2.5 text-amber-700"><CircleAlert size={18} /></span>
               <div>
                 <h3 className="text-sm font-bold text-slate-900">Données financières non disponibles</h3>
-                <p className="mt-2 text-xs leading-5 text-slate-500">Les loyers encaissés, impayés, dépenses et soldes ne sont pas calculés ici. Ils nécessitent les règles métier validées et les modules de paiements et de comptabilité.</p>
+                <p className="mt-2 text-xs leading-5 text-slate-500">Les registres de paiements et de dépenses sont disponibles en démonstration. Les échéances, affectations, impayés, soldes et reversements ne sont pas calculés tant que les règles métier ne sont pas approuvées.</p>
               </div>
             </div>
             <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
               <div className="flex items-center gap-2 text-xs font-semibold text-blue-800"><Wallet size={15} /> Prochaine étape métier</div>
-              <p className="mt-2 text-[11px] leading-5 text-slate-600">Définir les échéances, paiements partiels, affectations et rapprochements avant d'afficher des indicateurs financiers fiables.</p>
+              <p className="mt-2 text-[11px] leading-5 text-slate-600">Les paiements et dépenses peuvent être consultés dans leurs registres. Définir les échéances, affectations, règles de validation et rapprochements avant d'afficher des indicateurs financiers fiables.</p>
             </div>
           </article>
         </section>
