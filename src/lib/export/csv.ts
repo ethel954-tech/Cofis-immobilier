@@ -12,7 +12,7 @@ type OptionsExportCsv = {
 
 function protegerCellule(valeur: ValeurCsv): string {
   const texte = String(valeur ?? "");
-  const securise = /^[\s]*[=+@-]/.test(texte) ? "'" + texte : texte;
+  const securise = typeof valeur === "string" && /^[\s]*[=+@-]/.test(texte) ? "'" + texte : texte;
   return '"' + securise.replaceAll('"', '""') + '"';
 }
 
