@@ -14,8 +14,8 @@ Le développement fonctionnel se poursuit sur la branche `development`. La branc
 - Gestion des unités / logements et rattachement aux immeubles.
 - Répertoire des locataires.
 - Registre des baux et rattachement locataire–unité.
-- Registre de démonstration des paiements (recherche et export CSV filtré, sans affectation aux échéances).
-- Registre de démonstration des dépenses (recherche et export CSV filtré, sans validation comptable).
+- Registre de démonstration des paiements (recherche, filtre par période et export CSV filtré, sans affectation aux échéances).
+- Registre de démonstration des dépenses (recherche, filtre par période et export CSV filtré, sans validation comptable).
 - Rapports synthétiques et export CSV du résumé.
 
 Les modules de démonstration utilisent le stockage local du navigateur, y compris les registres financiers expérimentaux. Les exports CSV des registres financiers reprennent les résultats filtrés et protègent les cellules contre l’exécution de formules dans les tableurs. Les données d'exemple sont fictives, ne sont pas partagées entre utilisateurs et ne constituent pas des données métier persistantes. Ne pas y saisir de données personnelles, pièces d'identité ou contrats réels.
