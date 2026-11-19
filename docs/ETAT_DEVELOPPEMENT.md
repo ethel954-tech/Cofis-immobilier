@@ -37,7 +37,9 @@ Dernière mise à jour : 19 novembre 2026
 - Les données ne sont pas synchronisées, sauvegardées côté serveur ou partagées entre utilisateurs.
 - Les fiches de démonstration ne doivent pas contenir de données personnelles ou contractuelles réelles.
 - Les valeurs de loyer et de dépôt affichées dans les modules ne sont pas des écritures comptables, encaissements ou soldes.
-- Les rapports ne sont pas des rapports comptables ou financiers officiels.\n- Le tableau de bord lit les listes enregistrées localement ; il ne synchronise pas automatiquement les changements effectués dans un autre onglet déjà ouvert.\n- Les indicateurs financiers restent masqués tant que les règles métier et les modules de paiement ne sont pas validés.
+- Les rapports ne sont pas des rapports comptables ou financiers officiels.
+- Le tableau de bord lit les listes enregistrées localement ; il ne synchronise pas automatiquement les changements effectués dans un autre onglet déjà ouvert.
+- Les indicateurs financiers restent masqués tant que les règles métier et les modules de paiement ne sont pas validés.
 - Les statuts de bail et d'unité sont déclaratifs. Ils ne sont pas automatiquement recalculés selon les dates ou les contrats.
 
 ## Règles métier à ne pas présumer
