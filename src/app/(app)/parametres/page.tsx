@@ -44,12 +44,10 @@ export default function PageParametres() {
       if (brut) {
         const valeur: unknown = JSON.parse(brut);
         if (typeof valeur === "object" && valeur !== null && !Array.isArray(valeur)) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect -- Chargement des paramètres de démonstration.
           setFormulaire({ ...valeursInitiales, ...(valeur as Partial<ParametresAgence>) });
         }
       }
     } catch { /* Conserver les paramètres initiaux. */ }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fin de l'hydratation locale.
     setInitialise(true);
   }, []);
 
