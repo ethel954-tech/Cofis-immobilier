@@ -79,12 +79,10 @@ export default function PagePaiements() {
         return Array.isArray(valeur) ? valeur as T : defaut;
       } catch { return defaut; }
     };
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation initiale des registres de démonstration.
     setPaiements(lire(CLE_PAIEMENTS, paiementsExemple));
     setBaux(lire(CLE_BAUX, bauxExemple));
     setLocataires(lire(CLE_LOCATAIRES, locatairesExemple));
     setUnites(lire(CLE_UNITES, unitesExemple));
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fin de l’hydratation locale.
     setInitialise(true);
   }, []);
 
