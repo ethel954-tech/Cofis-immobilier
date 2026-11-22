@@ -18,7 +18,7 @@ Le prototype ne demande aucun identifiant. Ce parcours est volontairement distin
 5. **Locataires** — consulter les fiches de particuliers et d'entreprises.
 6. **Baux** — montrer le rattachement entre locataire et unité, les dates, le loyer et le statut saisi.
 7. **Paiements et dépenses** — montrer les registres, la recherche, les filtres de dates et l'export CSV.
-8. **Maintenance** — montrer le signalement d'une intervention, sa priorité et le suivi par statut.\n9. **Rapports** — terminer par la synthèse des données de démonstration.
+8. **Maintenance** — montrer la création d'un signalement, sa priorité, puis modifier son statut directement depuis la liste.\n9. **Rapports** — terminer par la synthèse des données de démonstration.
 
 ## Ce que le prototype permet de montrer
 
