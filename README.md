@@ -6,6 +6,10 @@ Plateforme de gestion immobilière et locative destinée au marché camerounais 
 
 Le développement fonctionnel se poursuit sur la branche `development`. La branche `main` reste réservée aux versions relues et stabilisées.
 
+### Accès à la démonstration
+
+Depuis l'écran de connexion, utiliser **Accéder à la démonstration**. Le parcours initialise des exemples fictifs uniquement dans le navigateur et ouvre le tableau de bord ; il ne crée pas de session utilisateur. Voir `docs/GUIDE_PRESENTATION_CLIENT.md` pour le parcours de présentation et les limites à annoncer.
+
 ### Modules disponibles en démonstration
 
 - Tableau de bord interne.
