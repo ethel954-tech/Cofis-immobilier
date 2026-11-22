@@ -39,7 +39,7 @@ const elements: ElementNavigation[] = [
   { libelle: "Dépenses", icone: Wallet, href: "/depenses", groupe: "Finance" },
   { libelle: "Reversements", icone: ArrowLeftRight, groupe: "Finance" },
   { libelle: "Rapports", icone: BarChart3, href: "/rapports", groupe: "Pilotage" },
-  { libelle: "Paramètres", icone: Settings2, groupe: "Administration" }
+  { libelle: "Paramètres", icone: Settings2, href: "/parametres", groupe: "Administration" }
 ];
 
 const groupes = [...new Set(elements.map((element) => element.groupe))];
