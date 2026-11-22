@@ -33,6 +33,7 @@ const liensMobiles = [
   { libelle: "Paiements", href: "/paiements", groupe: "Finance" },
   { libelle: "Dépenses", href: "/depenses", groupe: "Finance" },
   { libelle: "Rapports", href: "/rapports", groupe: "Pilotage" },
+  { libelle: "Paramètres", href: "/parametres", groupe: "Administration" },
 ];
 
 export function EnteteApplication() {
