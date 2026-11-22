@@ -58,11 +58,9 @@ export default function PageMaintenance() {
       const brut = localStorage.getItem(CLE);
       if (brut) {
         const valeur: unknown = JSON.parse(brut);
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation du registre de démonstration.
         if (Array.isArray(valeur)) setInterventions(valeur as Intervention[]);
       }
     } catch { /* Conserver les exemples si le stockage est illisible. */ }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fin de l'hydratation locale.
     setInitialise(true);
   }, []);
 
