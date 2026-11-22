@@ -54,11 +54,9 @@ export default function PageDepenses() {
       const brut = localStorage.getItem(CLE_DEPENSES);
       if (brut) {
         const valeur: unknown = JSON.parse(brut);
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation initiale du registre local.
         if (Array.isArray(valeur)) setDepenses(valeur as Depense[]);
       }
     } catch { /* Conserver les exemples si le stockage est illisible. */ }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fin de l’hydratation locale.
     setInitialise(true);
   }, []);
 
