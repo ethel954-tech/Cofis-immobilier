@@ -14,7 +14,8 @@ import {
   CircleAlert,
   ClipboardList,
   UserRound,
-  Layers3
+  Layers3,
+  Wrench
 } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 
@@ -64,7 +65,8 @@ const raccourcis = [
   { href: "/immeubles", titre: "Immeubles", description: "Consulter le patrimoine immobilier", icone: Building2 },
   { href: "/unites", titre: "Unités", description: "Gérer appartements et locaux", icone: Home },
   { href: "/locataires", titre: "Locataires", description: "Consulter les dossiers locataires", icone: Users },
-  { href: "/baux", titre: "Baux", description: "Suivre les contrats déclarés", icone: FileText },\n  { href: "/maintenance", titre: "Maintenance", description: "Suivre les signalements d’intervention", icone: Wrench },
+  { href: "/baux", titre: "Baux", description: "Suivre les contrats déclarés", icone: FileText },
+  { href: "/maintenance", titre: "Maintenance", description: "Suivre les signalements d’intervention", icone: Wrench },
   { href: "/paiements", titre: "Paiements", description: "Consulter le registre des paiements", icone: Wallet },
   { href: "/depenses", titre: "Dépenses", description: "Consulter le registre des dépenses", icone: ClipboardList },
   { href: "/rapports", titre: "Rapports", description: "Consulter les synthèses de démonstration", icone: ClipboardList }
