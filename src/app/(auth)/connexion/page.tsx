@@ -36,29 +36,18 @@ export default function PageConnexion() {
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-xl font-extrabold text-white">C</span>
             <p className="mt-3 text-sm font-extrabold tracking-[0.2em] text-slate-900">COFIS IMMOBILIER</p>
           </div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Espace sécurisé</p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">Bon retour.</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-500">Connectez-vous à votre espace de gestion COFIS.</p>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Prototype interactif</p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">Découvrez COFIS IMMOBILIER.</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-500">Explorez les principaux modules de gestion immobilière à travers un espace de démonstration prêt à parcourir.</p>
 
-          <form className="mt-9 space-y-5">
-            <div>
-              <label htmlFor="email" className="mb-2 block text-xs font-semibold text-slate-700">Adresse e-mail</label>
-              <input id="email" name="email" type="email" autoComplete="email" placeholder="nom@cofis.cm" disabled className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-500 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed" />
-            </div>
-            <div>
-              <label htmlFor="mot-de-passe" className="mb-2 block text-xs font-semibold text-slate-700">Mot de passe</label>
-              <div className="relative">
-                <LockKeyhole size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input id="mot-de-passe" name="password" type="password" autoComplete="current-password" placeholder="••••••••••••" disabled className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm text-slate-500 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed" />
-              </div>
-            </div>
+          <div className="mt-9 space-y-3">
             <Link href="/demo" className="flex h-12 w-full items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:bg-blue-700">Accéder à la démonstration</Link>
-            <p className="text-center text-[11px] leading-5 text-slate-400">Ouvre un espace de présentation avec des données fictives. Aucun compte n’est nécessaire.</p>
-          </form>
+            <p className="text-center text-[11px] leading-5 text-slate-400">Aucun compte n'est nécessaire pour cette présentation.</p>
+          </div>
 
           <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-            <p className="text-xs font-semibold text-amber-900">Configuration requise</p>
-            <p className="mt-1 text-[11px] leading-5 text-amber-800">L'authentification sera activée après la configuration et la validation de Supabase. Aucun identifiant n'est demandé ni enregistré à ce stade.</p>
+            <p className="text-xs font-semibold text-amber-900">Mode prototype</p>
+            <p className="mt-1 text-[11px] leading-5 text-amber-800">Les exemples sont fictifs et restent dans ce navigateur. L'authentification et la synchronisation serveur seront activées après validation et configuration dédiées.</p>
           </div>
           <p className="mt-8 text-center text-[11px] text-slate-400">COFIS IMMOBILIER · Accès réservé au personnel autorisé</p>
         </section>
