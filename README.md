@@ -20,7 +20,8 @@ Depuis l'écran de connexion, utiliser **Accéder à la démonstration**. Le par
 - Registre des baux et rattachement locataire–unité.
 - Registre de démonstration des paiements (recherche, filtre par période, total de la sélection et export CSV filtré, sans affectation aux échéances).
 - Registre de démonstration des dépenses (recherche, filtre par période, total de la sélection et export CSV filtré, sans validation comptable).
-- Aperçu complémentaire du suivi de maintenance (signalements fictifs, priorité, statut et recherche).\n- Rapports synthétiques et export CSV du résumé.
+- Aperçu complémentaire du suivi de maintenance (signalements fictifs, priorité, statut et recherche).
+- Rapports synthétiques et export CSV du résumé.
 
 Les modules de démonstration utilisent le stockage local du navigateur, y compris les registres financiers expérimentaux et l'aperçu maintenance. Ce dernier n'envoie aucune notification et ne planifie pas de prestataire. Les exports CSV des registres financiers reprennent les résultats filtrés et protègent les cellules contre l’exécution de formules dans les tableurs. Un utilitaire partagé assure également l'export des propriétaires et des rapports. Les données d'exemple sont fictives, ne sont pas partagées entre utilisateurs et ne constituent pas des données métier persistantes. Ne pas y saisir de données personnelles, pièces d'identité ou contrats réels.
 
@@ -73,3 +74,8 @@ Les clients navigateur et serveur, ainsi que la validation des variables publiqu
 2. Revue de sécurité de l'intégration et validation des règles métier encore ouvertes.
 3. Approbation explicite de l'environnement Supabase et du schéma final.
 4. Activation contrôlée de l'authentification et de la persistance serveur, après tests RLS/RPC.
+
+
+## Paramètres de l'agence — aperçu
+
+Le module `/parametres` permet de saisir localement les coordonnées de démonstration de l'agence et de consulter une matrice indicative des rôles (administrateur, gestionnaire immobilier, comptable/finance et direction). Ces paramètres restent dans le navigateur. La matrice n'applique aucune permission réelle : l'authentification, les contrôles d'accès serveur et les politiques de base de données restent à intégrer et valider.
