@@ -59,6 +59,7 @@ export function EnteteApplication() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-3 md:gap-4">
+          <span className="hidden rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-800 sm:inline-flex">Prototype · données fictives</span>
           <button type="button" aria-label="Recherche (bientôt disponible)" disabled className="hidden h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 text-xs text-slate-400 sm:flex">
             <Search size={15} /> Recherche
             <span className="rounded border border-slate-200 px-1.5 py-0.5 text-[10px]">⌘ K</span>
