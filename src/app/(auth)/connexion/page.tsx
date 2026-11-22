@@ -1,6 +1,6 @@
 /* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
 import Link from "next/link";
-import { ArrowLeft, Building2, LockKeyhole, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Building2, ShieldCheck } from "lucide-react";
 
 export const metadata = {
   title: "Découvrir le prototype"
