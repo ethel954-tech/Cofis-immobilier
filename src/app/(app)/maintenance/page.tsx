@@ -79,7 +79,11 @@ export default function PageMaintenance() {
     }).sort((a, b) => b.dateSignalement.localeCompare(a.dateSignalement));
   }, [interventions, recherche, filtreStatut]);
 
-  const changerStatut = (id: number, statut: StatutIntervention) => {\n    setInterventions((liste) => liste.map((item) => item.id === id ? { ...item, statut } : item));\n  };\n\n  const enregistrer = (evenement: FormEvent<HTMLFormElement>) => {
+  const changerStatut = (id: number, statut: StatutIntervention) => {
+    setInterventions((liste) => liste.map((item) => item.id === id ? { ...item, statut } : item));
+  };
+
+  const enregistrer = (evenement: FormEvent<HTMLFormElement>) => {
     evenement.preventDefault();
     setErreur("");
     if (!formulaire.immeuble.trim() || !formulaire.dateSignalement || !formulaire.description.trim()) {
