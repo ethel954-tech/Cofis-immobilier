@@ -9,7 +9,7 @@ import {
   ClipboardList,
   CreditCard,
   FileText,
-  LayoutDashboard,
+  LayoutDashboard,\n  Wrench,
   Settings2,
   Users,
   Wallet
@@ -30,7 +30,7 @@ const elements: ElementNavigation[] = [
   { libelle: "Immeubles", icone: Building2, href: "/immeubles", groupe: "Patrimoine" },
   { libelle: "Unités / Logements", icone: Building2, href: "/unites", groupe: "Patrimoine" },
   { libelle: "Locataires", icone: Users, href: "/locataires", groupe: "Location" },
-  { libelle: "Baux", icone: FileText, href: "/baux", groupe: "Location" },
+  { libelle: "Baux", icone: FileText, href: "/baux", groupe: "Location" },\n  { libelle: "Maintenance", icone: Wrench, href: "/maintenance", groupe: "Patrimoine" },
   { libelle: "Échéances", icone: ClipboardList, groupe: "Finance" },
   { libelle: "Paiements", icone: CreditCard, href: "/paiements", groupe: "Finance" },
   { libelle: "Impayés", icone: BarChart3, groupe: "Finance" },
