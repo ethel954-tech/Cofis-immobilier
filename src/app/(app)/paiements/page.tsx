@@ -71,19 +71,22 @@ export default function PagePaiements() {
   const [erreur, setErreur] = useState("");
 
   useEffect(() => {
-    const lire = <T,>(cle: string, defaut: T): T => {
-      try {
-        const brut = localStorage.getItem(cle);
-        if (!brut) return defaut;
-        const valeur: unknown = JSON.parse(brut);
-        return Array.isArray(valeur) ? valeur as T : defaut;
-      } catch { return defaut; }
-    };
-    setPaiements(lire(CLE_PAIEMENTS, paiementsExemple));
-    setBaux(lire(CLE_BAUX, bauxExemple));
-    setLocataires(lire(CLE_LOCATAIRES, locatairesExemple));
-    setUnites(lire(CLE_UNITES, unitesExemple));
-    setInitialise(true);
+    const identifiant = window.setTimeout(() => {
+      const lire = <T,>(cle: string, defaut: T): T => {
+        try {
+          const brut = localStorage.getItem(cle);
+          if (!brut) return defaut;
+          const valeur: unknown = JSON.parse(brut);
+          return Array.isArray(valeur) ? valeur as T : defaut;
+        } catch { return defaut; }
+      };
+      setPaiements(lire(CLE_PAIEMENTS, paiementsExemple));
+      setBaux(lire(CLE_BAUX, bauxExemple));
+      setLocataires(lire(CLE_LOCATAIRES, locatairesExemple));
+      setUnites(lire(CLE_UNITES, unitesExemple));
+      setInitialise(true);
+    }, 0);
+    return () => window.clearTimeout(identifiant);
   }, []);
 
   useEffect(() => {
