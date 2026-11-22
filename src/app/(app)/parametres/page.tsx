@@ -39,16 +39,19 @@ export default function PageParametres() {
   const [enregistre, setEnregistre] = useState(false);
 
   useEffect(() => {
-    try {
-      const brut = localStorage.getItem(CLE);
-      if (brut) {
-        const valeur: unknown = JSON.parse(brut);
-        if (typeof valeur === "object" && valeur !== null && !Array.isArray(valeur)) {
-          setFormulaire({ ...valeursInitiales, ...(valeur as Partial<ParametresAgence>) });
+    const identifiant = window.setTimeout(() => {
+      try {
+        const brut = localStorage.getItem(CLE);
+        if (brut) {
+          const valeur: unknown = JSON.parse(brut);
+          if (typeof valeur === "object" && valeur !== null && !Array.isArray(valeur)) {
+            setFormulaire({ ...valeursInitiales, ...(valeur as Partial<ParametresAgence>) });
+          }
         }
-      }
-    } catch { /* Conserver les paramètres initiaux. */ }
-    setInitialise(true);
+      } catch { /* Conserver les paramètres initiaux. */ }
+      setInitialise(true);
+    }, 0);
+    return () => window.clearTimeout(identifiant);
   }, []);
 
   const enregistrer = (evenement: FormEvent<HTMLFormElement>) => {
