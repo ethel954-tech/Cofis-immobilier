@@ -23,9 +23,9 @@ type Formulaire = Omit<Intervention, "id" | "reference" | "statut">;
 
 const CLE = "cofis_demo_maintenance_v1";
 const exemples: Intervention[] = [
-  { id: 1, reference: "INT-DEMO-001", immeuble: "Résidence Les Palmiers", logement: "A-02", categorie: "Plomberie", priorite: "Urgente", dateSignalement: "2026-11-18", description: "Fuite signalée sous l'évier de la cuisine (exemple fictif).", statut: "En cours" },
-  { id: 2, reference: "INT-DEMO-002", immeuble: "Immeuble du Centre", logement: "B-04", categorie: "Électricité", priorite: "Normale", dateSignalement: "2026-11-20", description: "Vérification d'un interrupteur dans le séjour.", statut: "Planifiée" },
-  { id: 3, reference: "INT-DEMO-003", immeuble: "Résidence Les Palmiers", logement: "Parties communes", categorie: "Entretien", priorite: "Basse", dateSignalement: "2026-11-21", description: "Remplacement d'une ampoule dans l'escalier.", statut: "Terminée" }
+  { id: 1, reference: "INT-DEMO-001", immeuble: "Résidence Les Manguiers", logement: "LM-A01", categorie: "Plomberie", priorite: "Urgente", dateSignalement: "2026-11-18", description: "Fuite signalée sous l'évier de la cuisine (exemple fictif).", statut: "En cours" },
+  { id: 2, reference: "INT-DEMO-002", immeuble: "Immeuble Bonapriso", logement: "IB-B03", categorie: "Électricité", priorite: "Normale", dateSignalement: "2026-11-20", description: "Vérification d'un interrupteur dans le séjour.", statut: "Planifiée" },
+  { id: 3, reference: "INT-DEMO-003", immeuble: "Résidence Les Manguiers", logement: "Parties communes", categorie: "Entretien", priorite: "Basse", dateSignalement: "2026-11-21", description: "Remplacement d'une ampoule dans l'escalier.", statut: "Terminée" }
 ];
 const dateLocale = () => {
   const date = new Date();
