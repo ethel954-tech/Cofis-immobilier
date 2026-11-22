@@ -1,6 +1,6 @@
 # État du développement — COFIS IMMOBILIER
 
-Dernière mise à jour : 19 novembre 2026
+Dernière mise à jour : 22 novembre 2026
 
 ## Branche de travail
 
@@ -12,6 +12,15 @@ Dernière mise à jour : 19 novembre 2026
 - Clients Supabase navigateur/serveur préparés sur `development`, mais non appelés par les pages.
 - Aucune session Auth réelle ni protection de routes activée.
 - Modèle d'identité et matrice de rôles proposés dans `docs/MODELE_AUTORISATION_PROPOSE.md` ; droits détaillés non approuvés.
+
+## Préparation de la démonstration client
+
+- La page de connexion propose un accès explicite au prototype via `/demo`, sans demander de compte ni simuler une authentification.
+- Le parcours initialise uniquement les clés de démonstration absentes dans le navigateur et conserve les données locales déjà présentes.
+- Le jeu de données fictives relie les propriétaires, immeubles, unités, locataires, baux, paiements et dépenses pour une présentation cohérente.
+- L'en-tête de l'espace de travail affiche un indicateur « Prototype · données fictives ».
+- Un guide de présentation de 5 à 8 minutes est disponible dans `docs/GUIDE_PRESENTATION_CLIENT.md`.
+- Aucun hébergement, déploiement, compte utilisateur ou environnement Supabase n'a été activé.
 
 ## Navigation adaptative
 
