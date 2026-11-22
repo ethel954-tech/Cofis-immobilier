@@ -27,6 +27,9 @@ type DonneesTableau = {
   unites: Enregistrement[];
   locataires: Enregistrement[];
   baux: Enregistrement[];
+  paiements: Enregistrement[];
+  depenses: Enregistrement[];
+  maintenance: Enregistrement[];
 };
 
 const clesStockage = {
@@ -34,7 +37,10 @@ const clesStockage = {
   immeubles: "cofis_demo_immeubles_v1",
   unites: "cofis_demo_unites_v1",
   locataires: "cofis_demo_locataires_v1",
-  baux: "cofis_demo_baux_v1"
+  baux: "cofis_demo_baux_v1",
+  paiements: "cofis_demo_paiements_v1",
+  depenses: "cofis_demo_depenses_v1",
+  maintenance: "cofis_demo_maintenance_v1"
 } as const;
 
 const donneesVides: DonneesTableau = {
@@ -42,7 +48,10 @@ const donneesVides: DonneesTableau = {
   immeubles: [],
   unites: [],
   locataires: [],
-  baux: []
+  baux: [],
+  paiements: [],
+  depenses: [],
+  maintenance: []
 };
 
 function lireListe(cle: string): Enregistrement[] {
@@ -83,7 +92,10 @@ export default function PageTableauDeBord() {
       immeubles: lireListe(clesStockage.immeubles),
       unites: lireListe(clesStockage.unites),
       locataires: lireListe(clesStockage.locataires),
-      baux: lireListe(clesStockage.baux)
+      baux: lireListe(clesStockage.baux),
+      paiements: lireListe(clesStockage.paiements),
+      depenses: lireListe(clesStockage.depenses),
+      maintenance: lireListe(clesStockage.maintenance)
     });
     setInitialise(true);
   }, []);
@@ -169,6 +181,30 @@ export default function PageTableauDeBord() {
               <p className="mt-2 text-[11px] leading-5 text-slate-600">Les paiements et dépenses peuvent être consultés dans leurs registres. Définir les échéances, affectations, règles de validation et rapprochements avant d'afficher des indicateurs financiers fiables.</p>
             </div>
           </article>
+        </section>
+
+        <section>
+          <div className="mb-4">
+            <h3 className="text-sm font-bold text-slate-900">Activité des registres</h3>
+            <p className="mt-1 text-xs text-slate-500">Volumes saisis en démonstration, sans interprétation comptable.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <Link href="/paiements" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-200 hover:shadow-md">
+              <div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-600">Paiements enregistrés</span><Wallet size={18} className="text-blue-600" /></div>
+              <p className="mt-4 text-2xl font-bold text-slate-900">{initialise ? donnees.paiements.length : "—"}</p>
+              <p className="mt-1 text-[11px] text-slate-400">Écritures saisies dans le registre</p>
+            </Link>
+            <Link href="/depenses" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-200 hover:shadow-md">
+              <div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-600">Dépenses enregistrées</span><ClipboardList size={18} className="text-indigo-600" /></div>
+              <p className="mt-4 text-2xl font-bold text-slate-900">{initialise ? donnees.depenses.length : "—"}</p>
+              <p className="mt-1 text-[11px] text-slate-400">Pièces déclarées dans le registre</p>
+            </Link>
+            <Link href="/maintenance" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-200 hover:shadow-md">
+              <div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-600">Interventions ouvertes</span><Wrench size={18} className="text-amber-600" /></div>
+              <p className="mt-4 text-2xl font-bold text-slate-900">{initialise ? donnees.maintenance.filter((item) => item.statut !== "Terminée").length : "—"}</p>
+              <p className="mt-1 text-[11px] text-slate-400">Signalements non terminés</p>
+            </Link>
+          </div>
         </section>
 
         <section>
