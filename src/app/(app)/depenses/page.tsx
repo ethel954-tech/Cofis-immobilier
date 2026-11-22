@@ -50,14 +50,17 @@ export default function PageDepenses() {
   const [erreur, setErreur] = useState("");
 
   useEffect(() => {
-    try {
-      const brut = localStorage.getItem(CLE_DEPENSES);
-      if (brut) {
-        const valeur: unknown = JSON.parse(brut);
-        if (Array.isArray(valeur)) setDepenses(valeur as Depense[]);
-      }
-    } catch { /* Conserver les exemples si le stockage est illisible. */ }
-    setInitialise(true);
+    const identifiant = window.setTimeout(() => {
+      try {
+        const brut = localStorage.getItem(CLE_DEPENSES);
+        if (brut) {
+          const valeur: unknown = JSON.parse(brut);
+          if (Array.isArray(valeur)) setDepenses(valeur as Depense[]);
+        }
+      } catch { /* Conserver les exemples si le stockage est illisible. */ }
+      setInitialise(true);
+    }, 0);
+    return () => window.clearTimeout(identifiant);
   }, []);
 
   useEffect(() => {
