@@ -3,7 +3,8 @@
 /* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
 
 import { useEffect, useState, type FormEvent } from "react";
-import { FileText, CirclePlus, Search, Pencil, Trash2, X, CalendarDays, Home, Users, Wallet } from "lucide-react";
+import { FileText, CirclePlus, Search, Pencil, Trash2, X, CalendarDays, Home, Users, Wallet, Download } from "lucide-react";
+import { exporterCsv } from "@/lib/export/csv";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 
 type StatutBail = "Brouillon" | "Actif" | "Expiré" | "Résilié";
@@ -48,16 +49,19 @@ export default function PageBaux(){
  const [initialise,setInitialise]=useState(false);
  const [recherche,setRecherche]=useState("");
  const [filtre,setFiltre]=useState<"Tous"|StatutBail>("Tous");
+ const [dateDebut,setDateDebut]=useState("");
+ const [dateFin,setDateFin]=useState("");
  const [modal,setModal]=useState(false);
  const [editionId,setEditionId]=useState<number|null>(null);
  const [form,setForm]=useState(vide);
 
  useEffect(()=>{
-  try{
-   const lire=<T,>(cle:string,defaut:T):T=>{const brut=localStorage.getItem(cle);if(!brut)return defaut;const valeur:unknown=JSON.parse(brut);return (Array.isArray(valeur)?valeur:defaut) as T;};
-   // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
+  const identifiant=window.setTimeout(()=>{
+   const lire=<T,>(cle:string,defaut:T):T=>{try{const brut=localStorage.getItem(cle);if(!brut)return defaut;const valeur:unknown=JSON.parse(brut);return (Array.isArray(valeur)?valeur:defaut) as T;}catch{return defaut;}};
    setBaux(lire(CLE_BAUX,bauxExemple));setLocataires(lire(CLE_LOCATAIRES,locatairesExemple));setUnites(lire(CLE_UNITES,unitesExemple));setImmeubles(lire(CLE_IMMEUBLES,immeublesExemple));
-  }catch{/* Garder les données d'exemple. */}finally{setInitialise(true);}
+   setInitialise(true);
+  },0);
+  return ()=>window.clearTimeout(identifiant);
  },[]);
  useEffect(()=>{if(initialise){try{localStorage.setItem(CLE_BAUX,JSON.stringify(baux));}catch{/* Stockage local indisponible. */}}},[baux,initialise]);
 
@@ -67,16 +71,25 @@ export default function PageBaux(){
  const filtres=baux.filter(b=>{
   const q=recherche.trim().toLocaleLowerCase("fr");
   const trouve=!q||[b.reference,nomLocataire(b.locataireId),lieuUnite(b.uniteId)].some(x=>x.toLocaleLowerCase("fr").includes(q));
-  return trouve&&(filtre==="Tous"||b.statut===filtre);
+  return trouve&&(filtre==="Tous"||b.statut===filtre)&&(!dateDebut||b.dateDebut>=dateDebut)&&(!dateFin||b.dateDebut<=dateFin);
+ });
+ const exporterBaux=()=>exporterCsv({
+  nomFichier:"cofis-baux-demo.csv",
+  entetes:["Référence","Locataire","Unité","Immeuble","Date de début","Date de fin","Loyer mensuel déclaré (FCFA)","Dépôt déclaré (FCFA)","Statut déclaré","Notes"],
+  lignes:filtres.map(b=>[b.reference,nomLocataire(b.locataireId),unite(b.uniteId)?.reference??"",immeubles.find(x=>x.id===unite(b.uniteId)?.immeubleId)?.nom??"",b.dateDebut,b.dateFin,b.loyerMensuel,b.depotGarantie,b.statut,b.notes])
  });
  const ouvrirCreation=()=>{setEditionId(null);setForm({...vide,locataireId:locataires[0]?String(locataires[0].id):"",uniteId:unites[0]?String(unites[0].id):""});setModal(true);};
  const ouvrirEdition=(b:Bail)=>{setEditionId(b.id);setForm({reference:b.reference,locataireId:String(b.locataireId),uniteId:String(b.uniteId),dateDebut:b.dateDebut,dateFin:b.dateFin,loyerMensuel:String(b.loyerMensuel),depotGarantie:String(b.depotGarantie),statut:b.statut,notes:b.notes});setModal(true);};
  const enregistrer=(e:FormEvent<HTMLFormElement>)=>{
   e.preventDefault();
+  const reference=form.reference.trim();
+  if(!reference||!form.locataireId||!form.uniteId||!form.dateDebut||!form.dateFin){window.alert("Renseignez la référence, le locataire, l'unité et les deux dates.");return;}
   if(form.dateFin<form.dateDebut){window.alert("La date de fin doit être postérieure ou égale à la date de début.");return;}
+  if(!locataires.some(x=>x.id===Number(form.locataireId))||!unites.some(x=>x.id===Number(form.uniteId))){window.alert("Le locataire et l'unité sélectionnés doivent exister dans les registres.");return;}
+  if(baux.some(x=>x.id!==editionId&&x.reference.toLocaleLowerCase("fr")===reference.toLocaleLowerCase("fr"))){window.alert("Cette référence de bail est déjà utilisée.");return;}
   const loyer=Number(form.loyerMensuel),depot=Number(form.depotGarantie);
-  if(!Number.isSafeInteger(loyer)||loyer<0||!Number.isSafeInteger(depot)||depot<0){window.alert("Les montants doivent être des nombres entiers positifs en FCFA.");return;}
-  const donnees:Bail={id:editionId??Date.now(),reference:form.reference.trim(),locataireId:Number(form.locataireId),uniteId:Number(form.uniteId),dateDebut:form.dateDebut,dateFin:form.dateFin,loyerMensuel:loyer,depotGarantie:depot,statut:form.statut,notes:form.notes.trim()};
+  if(!Number.isSafeInteger(loyer)||loyer<0||!Number.isSafeInteger(depot)||depot<0){window.alert("Les montants doivent être des nombres entiers positifs ou nuls en FCFA.");return;}
+  const donnees:Bail={id:editionId??Date.now(),reference,locataireId:Number(form.locataireId),uniteId:Number(form.uniteId),dateDebut:form.dateDebut,dateFin:form.dateFin,loyerMensuel:loyer,depotGarantie:depot,statut:form.statut,notes:form.notes.trim()};
   setBaux(liste=>editionId===null?[donnees,...liste]:liste.map(x=>x.id===editionId?donnees:x));setModal(false);setForm(vide);
  };
  const supprimer=(b:Bail)=>{if(window.confirm(`Supprimer le bail de démonstration ${b.reference} ?`))setBaux(liste=>liste.filter(x=>x.id!==b.id));};
@@ -92,7 +105,7 @@ export default function PageBaux(){
   </div>
   <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
    <div className="flex items-center justify-between border-b border-slate-100 p-5"><div><h3 className="text-sm font-bold text-slate-900">Registre des baux</h3><p className="mt-1 text-xs text-slate-400">{filtres.length} résultat(s)</p></div><FileText size={19} className="text-slate-400"/></div>
-   <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between"><div className="relative w-full sm:max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/><input value={recherche} onChange={e=>setRecherche(e.target.value)} placeholder="Rechercher un bail, locataire, unité..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none focus:border-blue-400 focus:bg-white"/></div><div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">{(["Tous","Brouillon","Actif","Expiré","Résilié"] as const).map(s=><button key={s} onClick={()=>setFiltre(s)} className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold ${filtre===s?"bg-white text-blue-700 shadow-sm":"text-slate-500"}`}>{s}</button>)}</div></div>
+   <div className="flex flex-col gap-3 border-b border-slate-100 p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div className="relative w-full sm:max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/><input value={recherche} onChange={e=>setRecherche(e.target.value)} placeholder="Rechercher un bail, locataire, unité..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none focus:border-blue-400 focus:bg-white"/></div><div className="flex flex-wrap items-center gap-2"><button type="button" onClick={exporterBaux} disabled={!initialise||filtres.length===0} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-40"><Download size={14}/> Exporter CSV</button><div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">{(["Tous","Brouillon","Actif","Expiré","Résilié"] as const).map(s=><button key={s} type="button" onClick={()=>setFiltre(s)} className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold ${filtre===s?"bg-white text-blue-700 shadow-sm":"text-slate-500"}`}>{s}</button>)}</div></div></div><div className="flex flex-wrap items-center gap-2"><label className="flex items-center gap-1.5 text-[10px] text-slate-500">Début de période <input type="date" aria-label="Date de début de période" max={dateFin||undefined} value={dateDebut} onChange={e=>setDateDebut(e.target.value)} className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-[11px] text-slate-600"/></label><label className="flex items-center gap-1.5 text-[10px] text-slate-500">Fin de période <input type="date" aria-label="Date de fin de période" min={dateDebut||undefined} value={dateFin} onChange={e=>setDateFin(e.target.value)} className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-[11px] text-slate-600"/></label>{(dateDebut||dateFin)&&<button type="button" onClick={()=>{setDateDebut("");setDateFin("");}} className="h-9 rounded-lg px-2 text-[10px] font-semibold text-blue-700 hover:bg-blue-50">Effacer les dates</button>}</div></div>
    <div className="overflow-x-auto"><table className="w-full min-w-[980px] text-left"><thead className="bg-slate-50/80"><tr className="text-[10px] font-semibold uppercase tracking-wider text-slate-400"><th className="px-5 py-3">Référence / Locataire</th><th className="px-4 py-3">Unité / Immeuble</th><th className="px-4 py-3">Période</th><th className="px-4 py-3">Loyer mensuel</th><th className="px-4 py-3">Dépôt saisi</th><th className="px-4 py-3">Statut</th><th className="px-5 py-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-100">
     {filtres.map(b=><tr key={b.id} className="hover:bg-slate-50/70"><td className="px-5 py-4"><p className="text-xs font-semibold text-slate-800">{b.reference}</p><p className="mt-1 text-[11px] text-slate-500">{nomLocataire(b.locataireId)}</p></td><td className="px-4 py-4"><p className="flex items-center gap-1.5 text-xs text-slate-700"><Home size={13} className="text-slate-400"/>{lieuUnite(b.uniteId)}</p></td><td className="px-4 py-4"><p className="flex items-center gap-1.5 text-xs text-slate-700"><CalendarDays size={13} className="text-slate-400"/>{new Date(b.dateDebut+"T00:00:00").toLocaleDateString("fr-FR")} – {new Date(b.dateFin+"T00:00:00").toLocaleDateString("fr-FR")}</p></td><td className="px-4 py-4 text-xs font-semibold text-slate-700">{montant(b.loyerMensuel)}</td><td className="px-4 py-4 text-xs text-slate-600">{montant(b.depotGarantie)}</td><td className="px-4 py-4"><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${couleurs[b.statut]}`}>{b.statut}</span></td><td className="px-5 py-4 text-right"><div className="inline-flex gap-1"><button onClick={()=>ouvrirEdition(b)} aria-label={`Modifier ${b.reference}`} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-blue-700"><Pencil size={15}/></button><button onClick={()=>supprimer(b)} aria-label={`Supprimer ${b.reference}`} className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"><Trash2 size={15}/></button></div></td></tr>)}
     {filtres.length===0&&<tr><td colSpan={7} className="px-5 py-14 text-center"><FileText className="mx-auto text-slate-300" size={24}/><p className="mt-3 text-sm font-semibold text-slate-700">Aucun bail trouvé</p><p className="mt-1 text-xs text-slate-400">Modifiez les filtres ou créez un bail de démonstration.</p></td></tr>}
