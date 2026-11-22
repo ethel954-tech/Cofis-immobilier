@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, Building2, LockKeyhole, ShieldCheck } from "lucide-react";
 
 export const metadata = {
-  title: "Connexion"
+  title: "Découvrir le prototype"
 };
 
 export default function PageConnexion() {
