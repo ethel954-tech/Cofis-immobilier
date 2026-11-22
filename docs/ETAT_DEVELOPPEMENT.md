@@ -40,7 +40,8 @@ Dernière mise à jour : 22 novembre 2026
 | Baux | Liaison locataire–unité, dates, loyer saisi, dépôt saisi, statut déclaratif, notes, recherche et filtres |
 | Paiements | Registre local append-only, référence unique, rattachement à un bail, date, montant entier FCFA, mode et référence externe ; recherche, filtre par période, total de la sélection et export CSV filtré ; aucune affectation automatique |
 | Dépenses | Registre local append-only, référence unique, date, catégorie, description, fournisseur, montant entier FCFA, référence de justificatif, recherche, filtre par période, total de la sélection et export CSV filtré |
-| Maintenance (aperçu complémentaire) | Registre local de signalements, immeuble/logement, catégorie, priorité, date, statut déclaratif, recherche et filtre par statut ; création de signalements fictifs |\n| Rapports | Indicateurs de structure et export CSV de synthèse |
+| Maintenance (aperçu complémentaire) | Registre local de signalements, immeuble/logement, catégorie, priorité, date, statut déclaratif, recherche et filtre par statut ; création de signalements fictifs |
+| Rapports | Indicateurs de structure et export CSV de synthèse |
 
 ## Limites connues
 
@@ -49,7 +50,9 @@ Dernière mise à jour : 22 novembre 2026
 - Les fiches de démonstration ne doivent pas contenir de données personnelles ou contractuelles réelles.
 - Les valeurs de loyer et de dépôt affichées dans les modules ne sont pas des écritures comptables, encaissements ou soldes.
 - Les rapports ne sont pas des rapports comptables ou financiers officiels.
-- Les registres de paiements et dépenses sont des prototypes locaux append-only ; ils ne sont ni partagés ni persistants côté serveur.\n- Le module Maintenance est un aperçu complémentaire de démonstration : les signalements restent locaux, les statuts d'exemple ne déclenchent aucune intervention réelle et aucune notification ou planification de prestataire n'est envoyée.\n- Les exports CSV des registres financiers ne contiennent que les lignes actuellement filtrées ; ils utilisent un utilitaire partagé, un séparateur point-virgule, un BOM UTF-8 et une protection contre les formules de tableur. Le même utilitaire est utilisé pour les propriétaires et les rapports. Les totaux affichés dans les registres suivent les filtres actifs et restent des montants déclarés de démonstration, pas des pièces comptables.
+- Les registres de paiements et dépenses sont des prototypes locaux append-only ; ils ne sont ni partagés ni persistants côté serveur.
+- Le module Maintenance est un aperçu complémentaire de démonstration : les signalements restent locaux, les statuts d'exemple ne déclenchent aucune intervention réelle et aucune notification ou planification de prestataire n'est envoyée.
+- Les exports CSV des registres financiers ne contiennent que les lignes actuellement filtrées ; ils utilisent un utilitaire partagé, un séparateur point-virgule, un BOM UTF-8 et une protection contre les formules de tableur. Le même utilitaire est utilisé pour les propriétaires et les rapports. Les totaux affichés dans les registres suivent les filtres actifs et restent des montants déclarés de démonstration, pas des pièces comptables.
 - Les paiements ne sont pas affectés aux échéances ; aucun solde ou impayé n’est calculé.
 - Les dépenses ne sont pas approuvées, payées ou imputées à un bien ; elles ne sont pas déduites d’un reversement.
 - Le tableau de bord lit les listes enregistrées localement ; il ne synchronise pas automatiquement les changements effectués dans un autre onglet déjà ouvert.
@@ -96,3 +99,11 @@ Les résultats doivent être examinés avant de considérer le lot comme validé
 ## Garde-fous
 
 Aucune création de projet Supabase, connexion à une base, migration, réparation de migration, écriture dans une base partagée ou déploiement sans autorisation explicite du propriétaire du projet.
+
+
+## Paramètres administratifs
+
+- Une page `/parametres` permet de saisir le nom, le téléphone, l'e-mail, l'adresse et la ville de l'agence en mode démonstration.
+- Les paramètres sont enregistrés dans le stockage local du navigateur et ne sont pas partagés.
+- Une matrice indicative présente les rôles Administrateur, Gestionnaire immobilier, Comptable / Finance et Direction.
+- Cette matrice n'est pas une politique de sécurité appliquée. Aucun compte, rôle ou droit réel n'est créé ou modifié par cette page.
