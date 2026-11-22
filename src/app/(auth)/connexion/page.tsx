@@ -52,7 +52,8 @@ export default function PageConnexion() {
                 <input id="mot-de-passe" name="password" type="password" autoComplete="current-password" placeholder="••••••••••••" disabled className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm text-slate-500 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed" />
               </div>
             </div>
-            <button type="button" disabled className="h-12 w-full cursor-not-allowed rounded-xl bg-blue-600 text-sm font-semibold text-white opacity-50">Connexion indisponible pour le moment</button>
+            <Link href="/demo" className="flex h-12 w-full items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:bg-blue-700">Accéder à la démonstration</Link>
+            <p className="text-center text-[11px] leading-5 text-slate-400">Ouvre un espace de présentation avec des données fictives. Aucun compte n’est nécessaire.</p>
           </form>
 
           <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
