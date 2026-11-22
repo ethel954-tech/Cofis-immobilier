@@ -1,0 +1,109 @@
+# État du développement — COFIS IMMOBILIER
+
+Dernière mise à jour : 22 novembre 2026
+
+## Branche de travail
+
+- Développement : `development`
+- Branche stable : `main`
+- Aucun déploiement effectué.
+- Aucun projet Supabase partagé connecté ou modifié.
+- Aucune migration appliquée à une base partagée.
+- Clients Supabase navigateur/serveur préparés sur `development`, mais non appelés par les pages.
+- Aucune session Auth réelle ni protection de routes activée.
+- Modèle d'identité et matrice de rôles proposés dans `docs/MODELE_AUTORISATION_PROPOSE.md` ; droits détaillés non approuvés.
+
+## Préparation de la démonstration client
+
+- La page de connexion propose un accès explicite au prototype via `/demo`, sans demander de compte ni simuler une authentification.
+- Le parcours initialise uniquement les clés de démonstration absentes dans le navigateur et conserve les données locales déjà présentes.
+- Le jeu de données fictives relie les propriétaires, immeubles, unités, locataires, baux, paiements et dépenses pour une présentation cohérente.
+- L'en-tête de l'espace de travail affiche un indicateur « Prototype · données fictives ».
+- Un guide de présentation de 5 à 8 minutes est disponible dans `docs/GUIDE_PRESENTATION_CLIENT.md`.
+- Aucun hébergement, déploiement, compte utilisateur ou environnement Supabase n'a été activé.
+
+## Navigation adaptative
+
+- La navigation mobile est disponible depuis l'en-tête sur les petits écrans ; les liens actifs sont signalés et le menu se referme après sélection.
+- La navigation latérale de bureau reste inchangée.
+- Les modules non implémentés restent explicitement indiqués comme à venir ; aucune fonctionnalité métier n'est simulée comme active.
+
+## Modules de démonstration présents
+
+| Module | Fonctionnalités |
+|---|---|
+| Tableau de bord | Compteurs issus des données locales des modules, suivi des dossiers et raccourcis ; aucune métrique financière simulée |
+| Propriétaires | Répertoire, recherche, création et édition, export CSV de la liste filtrée, stockage local |
+| Immeubles | Répertoire, rattachement à un propriétaire, création et édition |
+| Unités / logements | Répertoire, rattachement à un immeuble, recherche, filtres, création, édition et suppression |
+| Locataires | Répertoire des particuliers et entreprises, recherche, filtres, création, édition et suppression |
+| Baux | Liaison locataire–unité, dates, loyer saisi, dépôt saisi, statut déclaratif, notes, recherche et filtres |
+| Paiements | Registre local append-only, référence unique, rattachement à un bail, date, montant entier FCFA, mode et référence externe ; recherche, filtre par période, total de la sélection et export CSV filtré ; aucune affectation automatique |
+| Dépenses | Registre local append-only, référence unique, date, catégorie, description, fournisseur, montant entier FCFA, référence de justificatif, recherche, filtre par période, total de la sélection et export CSV filtré |
+| Maintenance (aperçu complémentaire) | Registre local de signalements, immeuble/logement, catégorie, priorité, date, statut déclaratif, recherche et filtre par statut ; création de signalements fictifs |
+| Rapports | Indicateurs de structure et export CSV de synthèse |
+
+## Limites connues
+
+- Les données de démonstration sont conservées dans le stockage local du navigateur.
+- Les données ne sont pas synchronisées, sauvegardées côté serveur ou partagées entre utilisateurs.
+- Les fiches de démonstration ne doivent pas contenir de données personnelles ou contractuelles réelles.
+- Les valeurs de loyer et de dépôt affichées dans les modules ne sont pas des écritures comptables, encaissements ou soldes.
+- Les rapports ne sont pas des rapports comptables ou financiers officiels.
+- Les registres de paiements et dépenses sont des prototypes locaux append-only ; ils ne sont ni partagés ni persistants côté serveur.
+- Le module Maintenance est un aperçu complémentaire de démonstration : les signalements restent locaux, les statuts d'exemple ne déclenchent aucune intervention réelle et aucune notification ou planification de prestataire n'est envoyée.
+- Les exports CSV des registres financiers ne contiennent que les lignes actuellement filtrées ; ils utilisent un utilitaire partagé, un séparateur point-virgule, un BOM UTF-8 et une protection contre les formules de tableur. Le même utilitaire est utilisé pour les propriétaires et les rapports. Les totaux affichés dans les registres suivent les filtres actifs et restent des montants déclarés de démonstration, pas des pièces comptables.
+- Les paiements ne sont pas affectés aux échéances ; aucun solde ou impayé n’est calculé.
+- Les dépenses ne sont pas approuvées, payées ou imputées à un bien ; elles ne sont pas déduites d’un reversement.
+- Le tableau de bord lit les listes enregistrées localement ; il ne synchronise pas automatiquement les changements effectués dans un autre onglet déjà ouvert.
+- Les indicateurs financiers restent masqués tant que les règles métier et les modules de paiement ne sont pas validés.
+- Les statuts de bail et d'unité sont déclaratifs. Ils ne sont pas automatiquement recalculés selon les dates ou les contrats.
+
+## Règles métier à ne pas présumer
+
+Les éléments suivants restent à confirmer avant toute automatisation ou migration :
+
+- Définition officielle d'une unité occupée et source de vérité de l'occupation.
+- Cycle de vie complet d'un bail et conditions de transition entre statuts.
+- Autorisation ou non de baux historiques et chevauchement de périodes.
+- Règle d'unicité éventuelle d'un bail actif par unité.
+- Génération des échéances : périodicité, date d'exigibilité, prorata et ajustements.
+- Paiements partiels, paiements non affectés, trop-perçus, annulations et remboursements.
+- Formule de calcul des reversements propriétaires, retenues et commissions.
+- Rôle de COFIS dans la détention et le transfert des fonds encaissés.
+
+## Intégration Supabase préparée
+
+- `src/lib/supabase/configuration.ts` valide les variables publiques et refuse une configuration partielle.
+- `src/lib/supabase/client-navigateur.ts` utilise uniquement la clé publique/anon.
+- `src/lib/supabase/client-serveur.ts` est protégé par `server-only` et utilise les cookies Next.js.
+- Aucun client `service_role` n'est fourni et aucune page n'appelle ces clients.
+- La revue de sécurité et les conditions d'activation sont détaillées dans `docs/REVUE_INTEGRATION_SUPABASE.md`.
+
+## Modèle d'identité et d'autorisations
+
+Une proposition de rattachement Auth → `app.principals` et une matrice fonctionnelle de haut niveau ont été documentées. Les droits détaillés, les périmètres de propriétés et les règles de séparation des tâches restent à valider. Aucun contrôle d'accès réel n'a été activé.
+
+## Prochain lot technique
+
+La revue locale du lot doit être effectuée depuis le dépôt local avec :
+
+```powershell
+npm run typecheck
+npm run lint
+npm run build
+```
+
+Les résultats doivent être examinés avant de considérer le lot comme validé. Ne pas utiliser de commandes Git destructives pour nettoyer les fichiers locaux non suivis.
+
+## Garde-fous
+
+Aucune création de projet Supabase, connexion à une base, migration, réparation de migration, écriture dans une base partagée ou déploiement sans autorisation explicite du propriétaire du projet.
+
+
+## Paramètres administratifs
+
+- Une page `/parametres` permet de saisir le nom, le téléphone, l'e-mail, l'adresse et la ville de l'agence en mode démonstration.
+- Les paramètres sont enregistrés dans le stockage local du navigateur et ne sont pas partagés.
+- Une matrice indicative présente les rôles Administrateur, Gestionnaire immobilier, Comptable / Finance et Direction.
+- Cette matrice n'est pas une politique de sécurité appliquée. Aucun compte, rôle ou droit réel n'est créé ou modifié par cette page.

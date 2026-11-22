@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   ArrowLeftRight,
   Building2,
@@ -9,6 +10,7 @@ import {
   CreditCard,
   FileText,
   LayoutDashboard,
+  Wrench,
   Settings2,
   Users,
   Wallet
@@ -24,24 +26,27 @@ type ElementNavigation = {
 };
 
 const elements: ElementNavigation[] = [
-  { libelle: "Vue d'ensemble", icone: LayoutDashboard, href: "/dashboard", actif: true, groupe: "Général" },
-  { libelle: "Propriétaires", icone: Users, groupe: "Patrimoine" },
-  { libelle: "Immeubles", icone: Building2, groupe: "Patrimoine" },
-  { libelle: "Unités / Logements", icone: Building2, groupe: "Patrimoine" },
-  { libelle: "Locataires", icone: Users, groupe: "Location" },
-  { libelle: "Baux", icone: FileText, groupe: "Location" },
+  { libelle: "Vue d'ensemble", icone: LayoutDashboard, href: "/dashboard", groupe: "Général" },
+  { libelle: "Propriétaires", icone: Users, href: "/proprietaires", groupe: "Patrimoine" },
+  { libelle: "Immeubles", icone: Building2, href: "/immeubles", groupe: "Patrimoine" },
+  { libelle: "Unités / Logements", icone: Building2, href: "/unites", groupe: "Patrimoine" },
+  { libelle: "Locataires", icone: Users, href: "/locataires", groupe: "Location" },
+  { libelle: "Baux", icone: FileText, href: "/baux", groupe: "Location" },
+  { libelle: "Maintenance", icone: Wrench, href: "/maintenance", groupe: "Patrimoine" },
   { libelle: "Échéances", icone: ClipboardList, groupe: "Finance" },
-  { libelle: "Paiements", icone: CreditCard, groupe: "Finance" },
+  { libelle: "Paiements", icone: CreditCard, href: "/paiements", groupe: "Finance" },
   { libelle: "Impayés", icone: BarChart3, groupe: "Finance" },
-  { libelle: "Dépenses", icone: Wallet, groupe: "Finance" },
+  { libelle: "Dépenses", icone: Wallet, href: "/depenses", groupe: "Finance" },
   { libelle: "Reversements", icone: ArrowLeftRight, groupe: "Finance" },
-  { libelle: "Rapports", icone: BarChart3, groupe: "Pilotage" },
-  { libelle: "Paramètres", icone: Settings2, groupe: "Administration" }
+  { libelle: "Rapports", icone: BarChart3, href: "/rapports", groupe: "Pilotage" },
+  { libelle: "Paramètres", icone: Settings2, href: "/parametres", groupe: "Administration" }
 ];
 
 const groupes = [...new Set(elements.map((element) => element.groupe))];
 
 export function NavigationLaterale() {
+  const cheminActuel = usePathname();
+
   return (
     <aside className="flex h-full w-[264px] shrink-0 flex-col border-r border-slate-200/80 bg-white">
       <Link href="/dashboard" className="flex h-[82px] items-center gap-3 border-b border-slate-100 px-6">
@@ -59,6 +64,8 @@ export function NavigationLaterale() {
             <div className="space-y-1">
               {elements.filter((element) => element.groupe === groupe).map((element) => {
                 const Icone = element.icone;
+                const estActif = element.href === cheminActuel;
+                const classes = estActif ? "bg-blue-50 text-blue-700 font-semibold" : "text-slate-500 font-medium";
                 const contenu = (
                   <>
                     <Icone size={17} strokeWidth={1.8} />
@@ -68,7 +75,7 @@ export function NavigationLaterale() {
                 );
 
                 return element.href ? (
-                  <Link key={element.libelle} href={element.href} aria-current={element.actif ? "page" : undefined} className="flex items-center gap-3 rounded-xl bg-blue-50 px-3 py-2.5 text-[13px] font-semibold text-blue-700">
+                  <Link key={element.libelle} href={element.href} aria-current={estActif ? "page" : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] transition hover:bg-blue-50 hover:text-blue-700 ${classes}`}>
                     {contenu}
                   </Link>
                 ) : (
