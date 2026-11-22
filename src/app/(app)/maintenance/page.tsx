@@ -54,14 +54,17 @@ export default function PageMaintenance() {
   const [erreur, setErreur] = useState("");
 
   useEffect(() => {
-    try {
-      const brut = localStorage.getItem(CLE);
-      if (brut) {
-        const valeur: unknown = JSON.parse(brut);
-        if (Array.isArray(valeur)) setInterventions(valeur as Intervention[]);
-      }
-    } catch { /* Conserver les exemples si le stockage est illisible. */ }
-    setInitialise(true);
+    const identifiant = window.setTimeout(() => {
+      try {
+        const brut = localStorage.getItem(CLE);
+        if (brut) {
+          const valeur: unknown = JSON.parse(brut);
+          if (Array.isArray(valeur)) setInterventions(valeur as Intervention[]);
+        }
+      } catch { /* Conserver les exemples si le stockage est illisible. */ }
+      setInitialise(true);
+    }, 0);
+    return () => window.clearTimeout(identifiant);
   }, []);
 
   useEffect(() => {
