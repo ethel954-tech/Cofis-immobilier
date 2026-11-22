@@ -3,8 +3,9 @@
 /* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Building2, CirclePlus, DoorOpen, Home, Pencil, Search, Trash2, X, Wallet } from "lucide-react";
+import { Building2, CirclePlus, DoorOpen, Download, Home, Pencil, Search, Trash2, X, Wallet } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
+import { exporterCsv } from "@/lib/export/csv";
 
 type StatutUnite = "Disponible" | "Occupée" | "En maintenance" | "Inactive";
 type TypeUnite = "Appartement" | "Studio" | "Bureau" | "Boutique" | "Entrepôt" | "Autre";
@@ -48,23 +49,25 @@ export default function PageUnites() {
   const [formulaire, setFormulaire] = useState(formulaireVide);
 
   useEffect(() => {
-    try {
-      const stockUnites = localStorage.getItem(CLE_UNITES);
-      const stockImmeubles = localStorage.getItem(CLE_IMMEUBLES);
-      if (stockUnites) {
-        const parsed: unknown = JSON.parse(stockUnites);
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
-        if (Array.isArray(parsed)) setUnites(parsed as Unite[]);
+    const temporisateur = window.setTimeout(() => {
+      try {
+        const stockUnites = localStorage.getItem(CLE_UNITES);
+        const stockImmeubles = localStorage.getItem(CLE_IMMEUBLES);
+        if (stockUnites) {
+          const parsed: unknown = JSON.parse(stockUnites);
+          if (Array.isArray(parsed)) setUnites(parsed as Unite[]);
+        }
+        if (stockImmeubles) {
+          const parsed: unknown = JSON.parse(stockImmeubles);
+          if (Array.isArray(parsed) && parsed.length) setImmeubles(parsed as Immeuble[]);
+        }
+      } catch {
+        // Conserver les données de démonstration si le stockage est illisible.
+      } finally {
+        setInitialise(true);
       }
-      if (stockImmeubles) {
-        const parsed: unknown = JSON.parse(stockImmeubles);
-        if (Array.isArray(parsed) && parsed.length) setImmeubles(parsed as Immeuble[]);
-      }
-    } catch {
-      // Conserver les données de démonstration si le stockage est illisible.
-    } finally {
-      setInitialise(true);
-    }
+    }, 0);
+    return () => window.clearTimeout(temporisateur);
   }, []);
 
   useEffect(() => {
@@ -93,7 +96,22 @@ export default function PageUnites() {
   const enregistrer = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const reference = formulaire.reference.trim();
-    const doublon = unites.some((u) => u.id !== editionId && u.immeubleId === Number(formulaire.immeubleId) && u.reference.toLocaleLowerCase("fr") === reference.toLocaleLowerCase("fr"));
+    const immeubleId = Number(formulaire.immeubleId);
+    const loyerMensuel = Number(formulaire.loyerMensuel);
+    const surface = formulaire.surface.trim() ? Number(formulaire.surface) : null;
+    if (!reference || !immeubles.some((bien) => bien.id === immeubleId)) {
+      window.alert("Sélectionnez un immeuble existant et renseignez la référence de l'unité.");
+      return;
+    }
+    if (!Number.isSafeInteger(loyerMensuel) || loyerMensuel < 0) {
+      window.alert("Le loyer indicatif doit être un montant entier positif ou nul en FCFA.");
+      return;
+    }
+    if (surface !== null && (!Number.isFinite(surface) || surface <= 0)) {
+      window.alert("La surface doit être un nombre supérieur à zéro.");
+      return;
+    }
+    const doublon = unites.some((u) => u.id !== editionId && u.immeubleId === immeubleId && u.reference.trim().toLocaleLowerCase("fr") === reference.toLocaleLowerCase("fr"));
     if (doublon) {
       window.alert("Cette référence existe déjà dans cet immeuble.");
       return;
@@ -101,11 +119,11 @@ export default function PageUnites() {
     const donnees: Unite = {
       id: editionId ?? Date.now(),
       reference,
-      immeubleId: Number(formulaire.immeubleId),
+      immeubleId,
       type: formulaire.type,
       etage: formulaire.etage.trim(),
-      surface: formulaire.surface.trim() ? Number(formulaire.surface) : null,
-      loyerMensuel: Number(formulaire.loyerMensuel),
+      surface,
+      loyerMensuel,
       statut: formulaire.statut,
     };
     setUnites((liste) => editionId === null ? [donnees, ...liste] : liste.map((u) => u.id === editionId ? donnees : u));
@@ -117,6 +135,14 @@ export default function PageUnites() {
       setUnites((liste) => liste.filter((u) => u.id !== unite.id));
     }
   };
+  const exporterUnites = () => exporterCsv({
+    nomFichier: "cofis-unites.csv",
+    entetes: ["Référence", "Immeuble", "Ville", "Type", "Étage / Niveau", "Surface (m²)", "Loyer mensuel indicatif (FCFA)", "Statut déclaré"],
+    lignes: unitesFiltrees.map((unite) => {
+      const immeuble = immeubles.find((bien) => bien.id === unite.immeubleId);
+      return [unite.reference, immeuble?.nom ?? "Immeuble introuvable", immeuble?.ville ?? "", unite.type, unite.etage, unite.surface, unite.loyerMensuel, unite.statut];
+    }),
+  });
   const totalLoyers = unites.reduce((somme, unite) => somme + unite.loyerMensuel, 0);
   const compteStatut = (statut: StatutUnite) => unites.filter((u) => u.statut === statut).length;
   const couleurStatut: Record<StatutUnite, string> = {
@@ -146,7 +172,7 @@ export default function PageUnites() {
         </div>
 
         <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5"><div><h3 className="text-sm font-bold text-slate-900">Répertoire des unités</h3><p className="mt-1 text-xs text-slate-400">{unitesFiltrees.length} résultat(s)</p></div><Building2 size={19} className="text-slate-400"/></div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5"><div><h3 className="text-sm font-bold text-slate-900">Répertoire des unités</h3><p className="mt-1 text-xs text-slate-400">{unitesFiltrees.length} résultat(s)</p></div><div className="flex items-center gap-2"><button type="button" onClick={exporterUnites} disabled={unitesFiltrees.length === 0} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40"><Download size={15}/> Exporter CSV</button><Building2 size={19} className="text-slate-400"/></div></div>
           <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/><input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Rechercher une référence, un immeuble, une ville..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-50"/></div>
             <div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">{(["Tous", "Disponible", "Occupée", "En maintenance", "Inactive"] as const).map((statut) => <button key={statut} onClick={() => setFiltreStatut(statut)} className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold ${filtreStatut === statut ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>{statut}</button>)}</div>
