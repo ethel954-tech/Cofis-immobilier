@@ -26,7 +26,7 @@ const CLE_PAIEMENTS = "cofis_demo_paiements_v1";
 const MODES_PAIEMENT = ["Espèces", "Virement bancaire", "Chèque", "Mobile Money", "Autre"];
 
 function dateIsoPaiementValide(valeur: string): boolean {
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(valeur)) return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(valeur)) return false;
   const date = new Date(`${valeur}T00:00:00.000Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === valeur;
 }
