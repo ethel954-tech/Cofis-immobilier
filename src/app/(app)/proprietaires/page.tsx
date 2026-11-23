@@ -43,7 +43,7 @@ const proprietairesInitiaux: Proprietaire[] = [
 const CLE_STOCKAGE_PROPRIETAIRES = "cofis_demo_proprietaires_v1";
 
 function normaliserTelephone(valeur: string): string {
-  return valeur.replace(/\\D/g, "");
+  return valeur.replace(/\D/g, "");
 }
 
 function donneesProprietairesValides(valeur: unknown): valeur is Proprietaire[] {
@@ -162,7 +162,7 @@ export default function PageProprietaires() {
       setErreur("Sélectionnez un type de propriétaire valide.");
       return;
     }
-    if (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setErreur("L'adresse e-mail renseignée n'est pas valide.");
       return;
     }
