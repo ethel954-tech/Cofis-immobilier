@@ -23,6 +23,13 @@ type Paiement = {
 type FormulairePaiement = Omit<Paiement, "id">;
 
 const CLE_PAIEMENTS = "cofis_demo_paiements_v1";
+const MODES_PAIEMENT = ["Espèces", "Virement bancaire", "Chèque", "Mobile Money", "Autre"];
+
+function dateIsoPaiementValide(valeur: string): boolean {
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(valeur)) return false;
+  const date = new Date(`${valeur}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === valeur;
+}
 const CLE_BAUX = "cofis_demo_baux_v1";
 const CLE_LOCATAIRES = "cofis_demo_locataires_v1";
 const CLE_UNITES = "cofis_demo_unites_v1";
@@ -124,19 +131,34 @@ export default function PagePaiements() {
     evenement.preventDefault();
     setErreur("");
     const reference = formulaire.reference.trim();
-    if (!reference || !formulaire.bailId || !formulaire.datePaiement || !Number.isSafeInteger(formulaire.montant) || formulaire.montant <= 0) {
-      setErreur("Renseignez une référence, un bail, une date et un montant entier strictement positif.");
+    const referenceNormalisee = reference.toLocaleLowerCase("fr");
+    if (!reference || !Number.isSafeInteger(formulaire.bailId) || formulaire.bailId <= 0 || !dateIsoPaiementValide(formulaire.datePaiement)) {
+      setErreur("Renseignez une référence, un bail valide et une date de paiement valide.");
       return;
     }
-    if (paiements.some((paiement) => paiement.reference.toLocaleLowerCase("fr") === reference.toLocaleLowerCase("fr"))) {
-      setErreur("Cette référence de paiement existe déjà dans le registre.");
+    if (!Number.isSafeInteger(formulaire.montant) || formulaire.montant <= 0) {
+      setErreur("Le montant doit être un nombre entier positif en FCFA, sans décimales.");
+      return;
+    }
+    if (!MODES_PAIEMENT.includes(formulaire.mode)) {
+      setErreur("Sélectionnez un mode de paiement valide.");
+      return;
+    }
+    if (paiements.some((paiement) => paiement.reference.trim().toLocaleLowerCase("fr") === referenceNormalisee)) {
+      setErreur("Cette référence de paiement existe déjà dans le registre. Utilisez une référence unique.");
       return;
     }
     if (!baux.some((bail) => bail.id === formulaire.bailId)) {
       setErreur("Le bail sélectionné n'existe plus dans les données locales.");
       return;
     }
-    setPaiements((liste) => [{ ...formulaire, id: Date.now(), reference }, ...liste]);
+    setPaiements((liste) => [{
+      ...formulaire,
+      id: Date.now(),
+      reference,
+      referenceExterne: formulaire.referenceExterne.trim(),
+      observation: formulaire.observation.trim()
+    }, ...liste]);
     setModalOuvert(false);
     setFormulaire(formulaireVide());
   };
@@ -194,12 +216,12 @@ export default function PagePaiements() {
           <form onSubmit={enregistrer} className="space-y-4 p-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="reference-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Référence interne *</label><input id="reference-paiement" required value={formulaire.reference} onChange={(e) => setFormulaire({ ...formulaire, reference: e.target.value })} placeholder="PAY-2026-001" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
-              <div><label htmlFor="date-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Date de réception déclarée *</label><input id="date-paiement" type="date" required value={formulaire.datePaiement} onChange={(e) => setFormulaire({ ...formulaire, datePaiement: e.target.value })} className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
+              <div><label htmlFor="date-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Date de réception déclarée *</label><input id="date-paiement" type="date" required value={formulaire.datePaiement} onChange={(e) => setFormulaire({ ...formulaire, datePaiement: e.target.value })} aria-describedby="aide-date-paiement" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /><span id="aide-date-paiement" className="mt-1 block text-[10px] text-slate-400">La date doit correspondre à un jour du calendrier valide.</span></div>
             </div>
             <div><label htmlFor="bail-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Bail associé *</label><select id="bail-paiement" required value={formulaire.bailId || ""} onChange={(e) => setFormulaire({ ...formulaire, bailId: Number(e.target.value) })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="">Sélectionner un bail</option>{baux.map((bail) => <option key={bail.id} value={bail.id}>{bail.reference} — {locataires.find((locataire) => locataire.id === bail.locataireId)?.nom ?? "Locataire"}</option>)}</select></div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="montant-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Montant consigné (FCFA) *</label><input id="montant-paiement" type="number" min="1" step="1" required value={formulaire.montant || ""} onChange={(e) => setFormulaire({ ...formulaire, montant: e.target.value === "" ? 0 : Number(e.target.value) })} placeholder="150000" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
-              <div><label htmlFor="mode-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Mode déclaré *</label><select id="mode-paiement" value={formulaire.mode} onChange={(e) => setFormulaire({ ...formulaire, mode: e.target.value })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option>Espèces</option><option>Virement bancaire</option><option>Chèque</option><option>Mobile Money</option><option>Autre</option></select></div>
+              <div><label htmlFor="mode-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Mode déclaré *</label><select id="mode-paiement" required value={formulaire.mode} onChange={(e) => setFormulaire({ ...formulaire, mode: e.target.value })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">{MODES_PAIEMENT.map((mode) => <option key={mode}>{mode}</option>)}</select></div>
             </div>
             <div><label htmlFor="reference-externe" className="mb-1.5 block text-xs font-semibold text-slate-700">Référence externe (facultatif)</label><input id="reference-externe" value={formulaire.referenceExterne} onChange={(e) => setFormulaire({ ...formulaire, referenceExterne: e.target.value })} placeholder="Référence du reçu ou de la transaction" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
             <div><label htmlFor="observation-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Observation (facultatif)</label><textarea id="observation-paiement" rows={3} value={formulaire.observation} onChange={(e) => setFormulaire({ ...formulaire, observation: e.target.value })} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm" placeholder="Information complémentaire..." /></div>
