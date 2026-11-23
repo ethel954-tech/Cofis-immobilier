@@ -3,7 +3,8 @@
 /* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Building2, CirclePlus, Mail, MapPin, Pencil, Phone, Search, Trash2, Users, X } from "lucide-react";
+import { Building2, CirclePlus, Mail, MapPin, Pencil, Phone, Search, Trash2, Users, X, Download } from "lucide-react";
+import { exporterCsv } from "@/lib/export/csv";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 
 type TypeLocataire = "Particulier" | "Entreprise";
@@ -26,20 +27,23 @@ export default function PageLocataires() {
   const [modalOuvert, setModalOuvert] = useState(false);
   const [editionId, setEditionId] = useState<number | null>(null);
   const [formulaire, setFormulaire] = useState(formulaireVide);
+  const [erreurFormulaire, setErreurFormulaire] = useState("");
 
   useEffect(() => {
-    try {
-      const stock = localStorage.getItem(CLE_LOCATAIRES);
-      if (stock) {
-        const parsed: unknown = JSON.parse(stock);
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
-        if (Array.isArray(parsed)) setLocataires(parsed as Locataire[]);
+    const temporisateur = window.setTimeout(() => {
+      try {
+        const stock = localStorage.getItem(CLE_LOCATAIRES);
+        if (stock) {
+          const parsed: unknown = JSON.parse(stock);
+          if (Array.isArray(parsed)) setLocataires(parsed as Locataire[]);
+        }
+      } catch {
+        // Conserver les exemples si les données locales sont illisibles.
+      } finally {
+        setInitialise(true);
       }
-    } catch {
-      // Conserver les exemples si les données locales sont illisibles.
-    } finally {
-      setInitialise(true);
-    }
+    }, 0);
+    return () => window.clearTimeout(temporisateur);
   }, []);
 
   useEffect(() => {
@@ -49,7 +53,7 @@ export default function PageLocataires() {
 
   const locatairesFiltres = useMemo(() => locataires.filter((locataire) => {
     const terme = recherche.trim().toLocaleLowerCase("fr");
-    const correspondRecherche = !terme || [locataire.nom, locataire.telephone, locataire.email, locataire.ville].some((v) => v.toLocaleLowerCase("fr").includes(terme));
+    const correspondRecherche = !terme || [locataire.nom, locataire.telephone, locataire.email, locataire.ville, locataire.type, locataire.statut].some((v) => v.toLocaleLowerCase("fr").includes(terme));
     return correspondRecherche && (filtreStatut === "Tous" || locataire.statut === filtreStatut);
   }), [locataires, recherche, filtreStatut]);
 
@@ -59,10 +63,39 @@ export default function PageLocataires() {
     setFormulaire({ nom: locataire.nom, type: locataire.type, telephone: locataire.telephone, email: locataire.email, ville: locataire.ville, statut: locataire.statut });
     setModalOuvert(true);
   };
+  const exporterLocataires = () => {
+    exporterCsv({
+      nomFichier: "cofis-locataires-demo.csv",
+      entetes: ["Nom ou raison sociale", "Type", "Téléphone", "E-mail", "Ville", "Statut déclaré"],
+      lignes: locatairesFiltres.map((locataire) => [
+        locataire.nom, locataire.type, locataire.telephone, locataire.email, locataire.ville, locataire.statut
+      ])
+    });
+  };
+
   const enregistrer = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const donnees: Locataire = { id: editionId ?? Date.now(), nom: formulaire.nom.trim(), type: formulaire.type, telephone: formulaire.telephone.trim(), email: formulaire.email.trim(), ville: formulaire.ville.trim(), statut: formulaire.statut };
+    const nom = formulaire.nom.trim();
+    const telephone = formulaire.telephone.trim();
+    const email = formulaire.email.trim();
+    const ville = formulaire.ville.trim();
+    if (!nom) {
+      setErreurFormulaire("Le nom ou la raison sociale est obligatoire.");
+      return;
+    }
+    const telephoneNormalise = telephone.replace(/[\s().-]/g, "").toLocaleLowerCase("fr");
+    const emailNormalise = email.toLocaleLowerCase("fr");
+    const doublon = locataires.find((l) => l.id !== editionId && (
+      (emailNormalise && l.email.trim().toLocaleLowerCase("fr") === emailNormalise) ||
+      (telephoneNormalise && l.telephone.replace(/[\s().-]/g, "").toLocaleLowerCase("fr") === telephoneNormalise)
+    ));
+    if (doublon) {
+      setErreurFormulaire("Cette adresse e-mail ou ce numéro de téléphone est déjà associé à une autre fiche.");
+      return;
+    }
+    const donnees: Locataire = { id: editionId ?? Date.now(), nom, type: formulaire.type, telephone, email, ville, statut: formulaire.statut };
     setLocataires((liste) => editionId === null ? [donnees, ...liste] : liste.map((l) => l.id === editionId ? donnees : l));
+    setErreurFormulaire("");
     setModalOuvert(false);
     setFormulaire(formulaireVide);
   };
@@ -90,7 +123,7 @@ export default function PageLocataires() {
         </div>
 
         <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5"><div><h3 className="text-sm font-bold text-slate-900">Répertoire des locataires</h3><p className="mt-1 text-xs text-slate-400">{locatairesFiltres.length} résultat(s)</p></div><Users size={19} className="text-slate-400"/></div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5"><div><h3 className="text-sm font-bold text-slate-900">Répertoire des locataires</h3><p className="mt-1 text-xs text-slate-400">{locatairesFiltres.length} résultat(s)</p></div><div className="flex items-center gap-3"><button type="button" onClick={exporterLocataires} disabled={locatairesFiltres.length === 0} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40" title="Exporter les locataires filtrés au format CSV"><Download size={14}/> Exporter CSV</button><Users size={19} className="text-slate-400"/></div></div>
           <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/><input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Rechercher un nom, téléphone, e-mail..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-50"/></div>
             <div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">{(["Tous", "Prospect", "Actif", "Inactif"] as const).map((statut) => <button key={statut} onClick={() => setFiltreStatut(statut)} className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold ${filtreStatut === statut ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>{statut}</button>)}</div>
@@ -107,12 +140,13 @@ export default function PageLocataires() {
       {modalOuvert && <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/40 p-4 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) setModalOuvert(false); }}>
         <div role="dialog" aria-modal="true" aria-labelledby="titre-locataire" className="my-auto w-full max-w-xl rounded-2xl bg-white shadow-2xl">
           <div className="flex items-start justify-between border-b border-slate-100 p-5"><div><h3 id="titre-locataire" className="text-base font-bold text-slate-900">{editionId === null ? "Ajouter un locataire" : "Modifier la fiche locataire"}</h3><p className="mt-1 text-xs text-slate-500">Les informations d'identité officielles seront gérées dans un flux sécurisé ultérieur.</p></div><button onClick={() => setModalOuvert(false)} aria-label="Fermer" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100"><X size={17}/></button></div>
-          <form onSubmit={enregistrer} className="space-y-4 p-5">
+          <form onSubmit={enregistrer} onChange={() => setErreurFormulaire("")} className="space-y-4 p-5">
             <div><label htmlFor="nom-locataire" className="mb-1.5 block text-xs font-semibold text-slate-700">Nom complet ou raison sociale *</label><input id="nom-locataire" required value={formulaire.nom} onChange={(e) => setFormulaire({...formulaire, nom:e.target.value})} placeholder="Nom du locataire" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50"/></div>
             <div className="grid gap-4 sm:grid-cols-2"><div><label htmlFor="type-locataire" className="mb-1.5 block text-xs font-semibold text-slate-700">Type</label><select id="type-locataire" value={formulaire.type} onChange={(e) => setFormulaire({...formulaire, type:e.target.value as TypeLocataire})} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option>Particulier</option><option>Entreprise</option></select></div><div><label htmlFor="statut-locataire" className="mb-1.5 block text-xs font-semibold text-slate-700">Statut de la fiche</label><select id="statut-locataire" value={formulaire.statut} onChange={(e) => setFormulaire({...formulaire, statut:e.target.value as StatutLocataire})} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option>Prospect</option><option>Actif</option><option>Inactif</option></select></div></div>
             <div className="grid gap-4 sm:grid-cols-2"><div><label htmlFor="telephone-locataire" className="mb-1.5 block text-xs font-semibold text-slate-700">Téléphone</label><input id="telephone-locataire" type="tel" value={formulaire.telephone} onChange={(e) => setFormulaire({...formulaire, telephone:e.target.value})} placeholder="+237 6XX XXX XXX" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"/></div><div><label htmlFor="email-locataire" className="mb-1.5 block text-xs font-semibold text-slate-700">E-mail</label><input id="email-locataire" type="email" value={formulaire.email} onChange={(e) => setFormulaire({...formulaire, email:e.target.value})} placeholder="nom@exemple.cm" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"/></div></div>
             <div><label htmlFor="ville-locataire" className="mb-1.5 block text-xs font-semibold text-slate-700">Ville</label><input id="ville-locataire" value={formulaire.ville} onChange={(e) => setFormulaire({...formulaire, ville:e.target.value})} placeholder="Yaoundé" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"/></div>
-            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4"><button type="button" onClick={() => setModalOuvert(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600">Annuler</button><button type="submit" className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700">{editionId === null ? "Ajouter la fiche" : "Enregistrer les modifications"}</button></div>
+            {erreurFormulaire && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{erreurFormulaire}</p>}
+            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4"><button type="button" onClick={() => { setModalOuvert(false); setErreurFormulaire(""); }} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600">Annuler</button><button type="submit" className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700">{editionId === null ? "Ajouter la fiche" : "Enregistrer les modifications"}</button></div>
           </form>
         </div>
       </div>}
