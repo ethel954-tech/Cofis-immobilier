@@ -3,7 +3,8 @@
 /* eslint react/no-unescaped-entities: "off" -- Apostrophes françaises dans les libellés JSX. */
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Building2, CirclePlus, MapPin, Pencil, Search, X, Users, Home, Layers3 } from "lucide-react";
+import { Building2, CirclePlus, MapPin, Pencil, Search, X, Users, Home, Layers3, Download } from "lucide-react";
+import { exporterCsv } from "@/lib/export/csv";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 
 type TypeBien = "Résidentiel" | "Commercial" | "Mixte";
@@ -41,25 +42,28 @@ export default function PageImmeubles() {
   const [modalOuvert, setModalOuvert] = useState(false);
   const [editionId, setEditionId] = useState<number | null>(null);
   const [formulaire, setFormulaire] = useState(formulaireVide);
+  const [erreurFormulaire, setErreurFormulaire] = useState("");
 
   useEffect(() => {
-    try {
-      const biensStockes = localStorage.getItem(CLE_IMMEUBLES);
-      const proprietairesStockes = localStorage.getItem(CLE_PROPRIETAIRES);
-      if (biensStockes) {
-        const parsed: unknown = JSON.parse(biensStockes);
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
-        if (Array.isArray(parsed)) setImmeubles(parsed as Immeuble[]);
+    const temporisateur = window.setTimeout(() => {
+      try {
+        const biensStockes = localStorage.getItem(CLE_IMMEUBLES);
+        const proprietairesStockes = localStorage.getItem(CLE_PROPRIETAIRES);
+        if (biensStockes) {
+          const parsed: unknown = JSON.parse(biensStockes);
+          if (Array.isArray(parsed)) setImmeubles(parsed as Immeuble[]);
+        }
+        if (proprietairesStockes) {
+          const parsed: unknown = JSON.parse(proprietairesStockes);
+          if (Array.isArray(parsed) && parsed.length) setProprietaires(parsed as Proprietaire[]);
+        }
+      } catch {
+        // Conserver les exemples si les données locales sont illisibles.
+      } finally {
+        setInitialise(true);
       }
-      if (proprietairesStockes) {
-        const parsed: unknown = JSON.parse(proprietairesStockes);
-        if (Array.isArray(parsed) && parsed.length) setProprietaires(parsed as Proprietaire[]);
-      }
-    } catch {
-      // Conserver les exemples si les données locales sont illisibles.
-    } finally {
-      setInitialise(true);
-    }
+    }, 0);
+    return () => window.clearTimeout(temporisateur);
   }, []);
 
   useEffect(() => {
@@ -84,10 +88,38 @@ export default function PageImmeubles() {
     setFormulaire({ nom: bien.nom, type: bien.type, adresse: bien.adresse, ville: bien.ville, proprietaireId: String(bien.proprietaireId), nombreUnites: String(bien.nombreUnites), statut: bien.statut });
     setModalOuvert(true);
   };
+  const exporterImmeubles = () => {
+    exporterCsv({
+      nomFichier: "cofis-immeubles-demo.csv",
+      entetes: ["Nom", "Type", "Adresse", "Ville", "Propriétaire", "Nombre d'unités déclaré", "Statut déclaré"],
+      lignes: immeublesFiltres.map((bien) => [
+        bien.nom, bien.type, bien.adresse, bien.ville, nomProprietaire(bien.proprietaireId), bien.nombreUnites, bien.statut
+      ])
+    });
+  };
+
   const enregistrer = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const donnees: Immeuble = { id: editionId ?? Date.now(), nom: formulaire.nom.trim(), type: formulaire.type, adresse: formulaire.adresse.trim(), ville: formulaire.ville.trim(), proprietaireId: Number(formulaire.proprietaireId), nombreUnites: Math.max(0, Number(formulaire.nombreUnites)), statut: formulaire.statut };
+    const nom = formulaire.nom.trim();
+    const adresse = formulaire.adresse.trim();
+    const ville = formulaire.ville.trim();
+    const nombreUnites = Number(formulaire.nombreUnites);
+    const proprietaireId = Number(formulaire.proprietaireId);
+    if (!nom || !adresse || !ville) {
+      setErreurFormulaire("Veuillez renseigner le nom, l'adresse et la ville.");
+      return;
+    }
+    if (!Number.isSafeInteger(nombreUnites) || nombreUnites < 0) {
+      setErreurFormulaire("Le nombre d'unités doit être un entier positif ou nul.");
+      return;
+    }
+    if (!Number.isSafeInteger(proprietaireId) || !proprietaires.some((p) => p.id === proprietaireId)) {
+      setErreurFormulaire("Sélectionnez un propriétaire existant dans le registre.");
+      return;
+    }
+    const donnees: Immeuble = { id: editionId ?? Date.now(), nom, type: formulaire.type, adresse, ville, proprietaireId, nombreUnites, statut: formulaire.statut };
     setImmeubles((liste) => editionId === null ? [donnees, ...liste] : liste.map((bien) => bien.id === editionId ? donnees : bien));
+    setErreurFormulaire("");
     setModalOuvert(false);
     setFormulaire(formulaireVide);
   };
@@ -112,7 +144,7 @@ export default function PageImmeubles() {
         </div>
 
         <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5"><div><h3 className="text-sm font-bold text-slate-900">Répertoire des immeubles</h3><p className="mt-1 text-xs text-slate-400">{immeublesFiltres.length} résultat(s)</p></div><Layers3 size={19} className="text-slate-400"/></div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5"><div><h3 className="text-sm font-bold text-slate-900">Répertoire des immeubles</h3><p className="mt-1 text-xs text-slate-400">{immeublesFiltres.length} résultat(s)</p></div><div className="flex items-center gap-3"><button type="button" onClick={exporterImmeubles} disabled={immeublesFiltres.length === 0} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40" title="Exporter les immeubles filtrés au format CSV"><Download size={14}/> Exporter CSV</button><Layers3 size={19} className="text-slate-400"/></div></div>
           <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/><input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Rechercher un immeuble, une ville, un propriétaire..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-50"/></div>
             <div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">{(["Tous", "Résidentiel", "Commercial", "Mixte"] as const).map((t) => <button key={t} onClick={() => setFiltreType(t)} className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold ${filtreType === t ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>{t}</button>)}</div>
@@ -129,12 +161,13 @@ export default function PageImmeubles() {
       {modalOuvert && <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/40 p-4 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) setModalOuvert(false); }}>
         <div role="dialog" aria-modal="true" aria-labelledby="titre-immeuble" className="my-auto w-full max-w-xl rounded-2xl bg-white shadow-2xl">
           <div className="flex items-start justify-between border-b border-slate-100 p-5"><div><h3 id="titre-immeuble" className="text-base font-bold text-slate-900">{editionId === null ? "Ajouter un immeuble" : "Modifier l'immeuble"}</h3><p className="mt-1 text-xs text-slate-500">Renseignez les informations principales du bien.</p></div><button onClick={() => setModalOuvert(false)} aria-label="Fermer" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100"><X size={17}/></button></div>
-          <form onSubmit={enregistrer} className="space-y-4 p-5">
+          <form onSubmit={enregistrer} onChange={() => setErreurFormulaire("")} className="space-y-4 p-5">
             <div><label htmlFor="nom-immeuble" className="mb-1.5 block text-xs font-semibold text-slate-700">Nom de l'immeuble *</label><input id="nom-immeuble" required value={formulaire.nom} onChange={(e) => setFormulaire({...formulaire, nom:e.target.value})} placeholder="Ex. : Résidence Les Palmiers" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50"/></div>
             <div className="grid gap-4 sm:grid-cols-2"><div><label htmlFor="type-immeuble" className="mb-1.5 block text-xs font-semibold text-slate-700">Type de bien</label><select id="type-immeuble" value={formulaire.type} onChange={(e) => setFormulaire({...formulaire, type:e.target.value as TypeBien})} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option>Résidentiel</option><option>Commercial</option><option>Mixte</option></select></div><div><label htmlFor="unites-immeuble" className="mb-1.5 block text-xs font-semibold text-slate-700">Nombre d'unités</label><input id="unites-immeuble" type="number" min="0" step="1" required value={formulaire.nombreUnites} onChange={(e) => setFormulaire({...formulaire, nombreUnites:e.target.value})} className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"/></div></div>
             <div><label htmlFor="adresse-immeuble" className="mb-1.5 block text-xs font-semibold text-slate-700">Adresse / quartier *</label><input id="adresse-immeuble" required value={formulaire.adresse} onChange={(e) => setFormulaire({...formulaire, adresse:e.target.value})} placeholder="Ex. : Bastos, derrière l'ambassade..." className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"/></div>
             <div className="grid gap-4 sm:grid-cols-2"><div><label htmlFor="ville-immeuble" className="mb-1.5 block text-xs font-semibold text-slate-700">Ville *</label><input id="ville-immeuble" required value={formulaire.ville} onChange={(e) => setFormulaire({...formulaire, ville:e.target.value})} placeholder="Yaoundé" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"/></div><div><label htmlFor="proprietaire-immeuble" className="mb-1.5 block text-xs font-semibold text-slate-700">Propriétaire *</label><select id="proprietaire-immeuble" required value={formulaire.proprietaireId} onChange={(e) => setFormulaire({...formulaire, proprietaireId:e.target.value})} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="">Sélectionner</option>{proprietaires.map((p) => <option key={p.id} value={p.id}>{p.nom}</option>)}</select></div></div>
-            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4"><button type="button" onClick={() => setModalOuvert(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600">Annuler</button><button type="submit" className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700">{editionId === null ? "Ajouter l'immeuble" : "Enregistrer les modifications"}</button></div>
+            {erreurFormulaire && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{erreurFormulaire}</p>}
+            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4"><button type="button" onClick={() => { setModalOuvert(false); setErreurFormulaire(""); }} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600">Annuler</button><button type="submit" className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700">{editionId === null ? "Ajouter l'immeuble" : "Enregistrer les modifications"}</button></div>
           </form>
         </div>
       </div>}
