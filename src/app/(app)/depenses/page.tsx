@@ -20,6 +20,13 @@ type Depense = {
 type FormulaireDepense = Omit<Depense, "id">;
 
 const CLE_DEPENSES = "cofis_demo_depenses_v1";
+const CATEGORIES_DEPENSES = ["Entretien", "Réparation", "Nettoyage", "Sécurité", "Services", "Frais administratifs", "Autre"];
+
+function dateIsoValide(valeur: string): boolean {
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(valeur)) return false;
+  const date = new Date(`${valeur}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === valeur;
+}
 const depensesExemple: Depense[] = [
   { id: 601, reference: "DEP-DEMO-001", dateDepense: "2026-11-03", categorie: "Entretien", description: "Réparation d'une fuite — exemple fictif", fournisseur: "Plomberie Exemple", montant: 45000, referenceJustificatif: "FACT-DEMO-03" },
   { id: 602, reference: "DEP-DEMO-002", dateDepense: "2026-11-08", categorie: "Nettoyage", description: "Nettoyage des parties communes — exemple fictif", fournisseur: "Services Propreté", montant: 25000, referenceJustificatif: "" }
@@ -95,15 +102,30 @@ export default function PageDepenses() {
     evenement.preventDefault();
     setErreur("");
     const reference = formulaire.reference.trim();
-    if (!reference || !formulaire.dateDepense || !formulaire.description.trim() || !Number.isSafeInteger(formulaire.montant) || formulaire.montant <= 0) {
-      setErreur("Renseignez une référence, une date, une description et un montant entier strictement positif.");
+    const description = formulaire.description.trim();
+    const categorie = formulaire.categorie.trim();
+    const referenceNormalisee = reference.toLocaleLowerCase("fr");
+    if (!reference || !dateIsoValide(formulaire.dateDepense) || !description || !CATEGORIES_DEPENSES.includes(categorie)) {
+      setErreur("Renseignez une référence, une date valide, une catégorie et une description.");
       return;
     }
-    if (depenses.some((depense) => depense.reference.toLocaleLowerCase("fr") === reference.toLocaleLowerCase("fr"))) {
-      setErreur("Cette référence de dépense existe déjà dans le registre.");
+    if (!Number.isSafeInteger(formulaire.montant) || formulaire.montant <= 0) {
+      setErreur("Le montant doit être un nombre entier positif en FCFA, sans décimales.");
       return;
     }
-    setDepenses((liste) => [{ ...formulaire, id: Date.now(), reference, description: formulaire.description.trim() }, ...liste]);
+    if (depenses.some((depense) => depense.reference.trim().toLocaleLowerCase("fr") === referenceNormalisee)) {
+      setErreur("Cette référence de dépense existe déjà dans le registre. Utilisez une référence unique.");
+      return;
+    }
+    setDepenses((liste) => [{
+      ...formulaire,
+      id: Date.now(),
+      reference,
+      categorie,
+      description,
+      fournisseur: formulaire.fournisseur.trim(),
+      referenceJustificatif: formulaire.referenceJustificatif.trim()
+    }, ...liste]);
     setModalOuvert(false);
     setFormulaire(formulaireVide());
   };
@@ -151,10 +173,10 @@ export default function PageDepenses() {
           <form onSubmit={enregistrer} className="space-y-4 p-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="reference-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Référence interne *</label><input id="reference-depense" required value={formulaire.reference} onChange={(e) => setFormulaire({ ...formulaire, reference: e.target.value })} placeholder="DEP-2026-001" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
-              <div><label htmlFor="date-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Date déclarée *</label><input id="date-depense" type="date" required value={formulaire.dateDepense} onChange={(e) => setFormulaire({ ...formulaire, dateDepense: e.target.value })} className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
+              <div><label htmlFor="date-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Date déclarée *</label><input id="date-depense" type="date" required value={formulaire.dateDepense} onChange={(e) => setFormulaire({ ...formulaire, dateDepense: e.target.value })} aria-describedby="aide-date-depense" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /><span id="aide-date-depense" className="mt-1 block text-[10px] text-slate-400">La date doit correspondre à un jour du calendrier valide.</span></div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div><label htmlFor="categorie-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Catégorie *</label><select id="categorie-depense" value={formulaire.categorie} onChange={(e) => setFormulaire({ ...formulaire, categorie: e.target.value })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option>Entretien</option><option>Réparation</option><option>Nettoyage</option><option>Sécurité</option><option>Services</option><option>Frais administratifs</option><option>Autre</option></select></div>
+              <div><label htmlFor="categorie-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Catégorie *</label><select id="categorie-depense" required value={formulaire.categorie} onChange={(e) => setFormulaire({ ...formulaire, categorie: e.target.value })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">{CATEGORIES_DEPENSES.map((categorie) => <option key={categorie}>{categorie}</option>)}</select></div>
               <div><label htmlFor="montant-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Montant déclaré (FCFA) *</label><input id="montant-depense" type="number" min="1" step="1" required value={formulaire.montant || ""} onChange={(e) => setFormulaire({ ...formulaire, montant: e.target.value === "" ? 0 : Number(e.target.value) })} placeholder="45000" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
             </div>
             <div><label htmlFor="description-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Description *</label><input id="description-depense" required value={formulaire.description} onChange={(e) => setFormulaire({ ...formulaire, description: e.target.value })} placeholder="Ex. : réparation d'une fuite d'eau" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
@@ -163,7 +185,7 @@ export default function PageDepenses() {
               <div><label htmlFor="justificatif-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Référence du justificatif</label><input id="justificatif-depense" value={formulaire.referenceJustificatif} onChange={(e) => setFormulaire({ ...formulaire, referenceJustificatif: e.target.value })} placeholder="Facture, reçu, référence..." className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
             </div>
             {erreur && <p role="alert" className="rounded-xl bg-red-50 p-3 text-xs text-red-700">{erreur}</p>}
-            <p className="rounded-xl bg-slate-50 p-3 text-[10px] leading-5 text-slate-500">Cette entrée sera ajoutée au registre sans modification ni suppression dans cette démonstration. Aucun immeuble, propriétaire ou reversement n'est automatiquement associé.</p>
+            <p className="rounded-xl bg-slate-50 p-3 text-[10px] leading-5 text-slate-500">Cette entrée est ajoutée au registre de démonstration sans modification ni suppression. La référence doit être unique et le montant est saisi en FCFA entiers. Aucun immeuble, propriétaire ou reversement n'est automatiquement associé.</p>
             <div className="flex justify-end gap-2 border-t border-slate-100 pt-4"><button type="button" onClick={() => setModalOuvert(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600">Annuler</button><button type="submit" className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700">Consigner la dépense</button></div>
           </form>
         </section>
