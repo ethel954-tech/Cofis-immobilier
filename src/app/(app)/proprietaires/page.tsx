@@ -42,6 +42,20 @@ const proprietairesInitiaux: Proprietaire[] = [
 
 const CLE_STOCKAGE_PROPRIETAIRES = "cofis_demo_proprietaires_v1";
 
+function normaliserTelephone(valeur: string): string {
+  return valeur.replace(/\\D/g, "");
+}
+
+function donneesProprietairesValides(valeur: unknown): valeur is Proprietaire[] {
+  return Array.isArray(valeur) && valeur.every((element) =>
+    typeof element === "object" && element !== null &&
+    Number.isSafeInteger(element.id) && typeof element.nom === "string" &&
+    (element.type === "Particulier" || element.type === "Société") &&
+    typeof element.telephone === "string" && typeof element.email === "string" &&
+    typeof element.ville === "string" && Number.isSafeInteger(element.biens) && element.biens >= 0
+  );
+}
+
 const formulaireVide = {
   nom: "",
   type: "Particulier" as TypeProprietaire,
@@ -55,20 +69,21 @@ export default function PageProprietaires() {
   const [stockageInitialise, setStockageInitialise] = useState(false);
 
   useEffect(() => {
-    try {
-      const donneesEnregistrees = window.localStorage.getItem(CLE_STOCKAGE_PROPRIETAIRES);
-      if (donneesEnregistrees) {
-        const proprietairesEnregistres: unknown = JSON.parse(donneesEnregistrees);
-        if (Array.isArray(proprietairesEnregistres)) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydratation des données de démonstration depuis localStorage.
-          setProprietaires(proprietairesEnregistres as Proprietaire[]);
+    const identifiant = window.setTimeout(() => {
+      try {
+        const donneesEnregistrees = window.localStorage.getItem(CLE_STOCKAGE_PROPRIETAIRES);
+        if (donneesEnregistrees) {
+          const proprietairesEnregistres: unknown = JSON.parse(donneesEnregistrees);
+          if (donneesProprietairesValides(proprietairesEnregistrees)) {
+            setProprietaires(proprietairesEnregistres);
+          }
         }
+      } catch {
+        // En cas de stockage illisible, conserver les données de démonstration initiales.
       }
-    } catch {
-      // En cas de stockage illisible, conserver les données de démonstration initiales.
-    } finally {
       setStockageInitialise(true);
-    }
+    }, 0);
+    return () => window.clearTimeout(identifiant);
   }, []);
 
   useEffect(() => {
@@ -85,11 +100,12 @@ export default function PageProprietaires() {
   const [editionId, setEditionId] = useState<number | null>(null);
   const [formulaire, setFormulaire] = useState(formulaireVide);
   const [menuId, setMenuId] = useState<number | null>(null);
+  const [erreur, setErreur] = useState("");
 
   const proprietairesFiltres = useMemo(() => proprietaires.filter((proprietaire) => {
     const correspondAuFiltre = filtre === "Tous" || proprietaire.type === filtre;
     const terme = recherche.trim().toLocaleLowerCase("fr");
-    const correspondARecherche = !terme || [proprietaire.nom, proprietaire.email, proprietaire.telephone, proprietaire.ville]
+    const correspondARecherche = !terme || [proprietaire.nom, proprietaire.type, proprietaire.email, proprietaire.telephone, proprietaire.ville]
       .some((valeur) => valeur.toLocaleLowerCase("fr").includes(terme));
     return correspondAuFiltre && correspondARecherche;
   }), [proprietaires, filtre, recherche]);
@@ -97,6 +113,7 @@ export default function PageProprietaires() {
   const ouvrirCreation = () => {
     setEditionId(null);
     setFormulaire(formulaireVide);
+    setErreur("");
     setModalOuvert(true);
   };
 
@@ -110,6 +127,7 @@ export default function PageProprietaires() {
       ville: proprietaire.ville
     });
     setMenuId(null);
+    setErreur("");
     setModalOuvert(true);
   };
 
@@ -130,10 +148,43 @@ export default function PageProprietaires() {
 
   const enregistrer = (evenement: FormEvent<HTMLFormElement>) => {
     evenement.preventDefault();
+    setErreur("");
+    const nom = formulaire.nom.trim();
+    const telephone = formulaire.telephone.trim();
+    const email = formulaire.email.trim().toLocaleLowerCase("fr");
+    const ville = formulaire.ville.trim();
+
+    if (!nom) {
+      setErreur("Le nom ou la raison sociale est obligatoire.");
+      return;
+    }
+    if (formulaire.type !== "Particulier" && formulaire.type !== "Société") {
+      setErreur("Sélectionnez un type de propriétaire valide.");
+      return;
+    }
+    if (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+      setErreur("L'adresse e-mail renseignée n'est pas valide.");
+      return;
+    }
+
+    const telephoneNormalise = normaliserTelephone(telephone);
+    const doublon = proprietaires.some((element) => {
+      if (element.id === editionId) return false;
+      const emailExistant = element.email.trim().toLocaleLowerCase("fr");
+      const telephoneExistant = normaliserTelephone(element.telephone);
+      return (email && emailExistant === email) ||
+        (telephoneNormalise && telephoneExistant === telephoneNormalise);
+    });
+    if (doublon) {
+      setErreur("Cette adresse e-mail ou ce numéro de téléphone est déjà associé à un propriétaire.");
+      return;
+    }
+
+    const champs = { nom, type: formulaire.type, telephone, email, ville };
     if (editionId !== null) {
-      setProprietaires((liste) => liste.map((element) => element.id === editionId ? { ...element, ...formulaire } : element));
+      setProprietaires((liste) => liste.map((element) => element.id === editionId ? { ...element, ...champs } : element));
     } else {
-      setProprietaires((liste) => [{ id: Date.now(), ...formulaire, biens: 0 }, ...liste]);
+      setProprietaires((liste) => [{ id: Date.now(), ...champs, biens: 0 }, ...liste]);
     }
     setModalOuvert(false);
     setFormulaire(formulaireVide);
@@ -156,17 +207,17 @@ export default function PageProprietaires() {
         <div className="grid gap-4 sm:grid-cols-3">
           <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between"><span className="text-xs font-medium text-slate-500">Total propriétaires</span><span className="rounded-xl bg-blue-50 p-2.5 text-blue-700"><Users size={18} /></span></div>
-            <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{proprietaires.length}</p>
+            <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{stockageInitialise ? proprietaires.length : "—"}</p>
             <p className="mt-1 text-xs text-slate-400">Fiches dans cette démonstration</p>
           </article>
           <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between"><span className="text-xs font-medium text-slate-500">Particuliers</span><span className="rounded-xl bg-indigo-50 p-2.5 text-indigo-700"><Users size={18} /></span></div>
-            <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{proprietaires.filter((p) => p.type === "Particulier").length}</p>
+            <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{stockageInitialise ? proprietaires.filter((p) => p.type === "Particulier").length : "—"}</p>
             <p className="mt-1 text-xs text-slate-400">Personnes physiques</p>
           </article>
           <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between"><span className="text-xs font-medium text-slate-500">Sociétés</span><span className="rounded-xl bg-sky-50 p-2.5 text-sky-700"><Building2 size={18} /></span></div>
-            <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{proprietaires.filter((p) => p.type === "Société").length}</p>
+            <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{stockageInitialise ? proprietaires.filter((p) => p.type === "Société").length : "—"}</p>
             <p className="mt-1 text-xs text-slate-400">Personnes morales</p>
           </article>
         </div>
@@ -174,7 +225,7 @@ export default function PageProprietaires() {
         <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4 sm:p-5">
             <div><h3 className="text-sm font-bold text-slate-900">Répertoire des propriétaires</h3><p className="mt-1 text-xs text-slate-400">{proprietairesFiltres.length} résultat(s)</p></div>
-            <button type="button" onClick={exporterCsv} disabled={proprietairesFiltres.length === 0} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40" title="Exporter la liste actuellement filtrée au format CSV"><Download size={14} /> Exporter CSV</button>
+            <button type="button" onClick={exporterCsv} disabled={!stockageInitialise || proprietairesFiltres.length === 0} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40" title="Exporter la liste actuellement filtrée au format CSV"><Download size={14} /> Exporter CSV</button>
           </div>
           <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:max-w-sm"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Rechercher un nom, e-mail, téléphone..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-50" /></div>
@@ -213,6 +264,7 @@ export default function PageProprietaires() {
             <div><label htmlFor="type" className="mb-1.5 block text-xs font-semibold text-slate-700">Type de propriétaire</label><div className="relative"><select id="type" value={formulaire.type} onChange={(e) => setFormulaire({ ...formulaire, type: e.target.value as TypeProprietaire })} className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50"><option>Particulier</option><option>Société</option></select><ChevronDown size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" /></div></div>
             <div className="grid gap-4 sm:grid-cols-2"><div><label htmlFor="telephone" className="mb-1.5 block text-xs font-semibold text-slate-700">Téléphone</label><input id="telephone" type="tel" value={formulaire.telephone} onChange={(e) => setFormulaire({ ...formulaire, telephone: e.target.value })} placeholder="+237 6XX XXX XXX" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50" /></div><div><label htmlFor="email" className="mb-1.5 block text-xs font-semibold text-slate-700">Adresse e-mail</label><input id="email" type="email" value={formulaire.email} onChange={(e) => setFormulaire({ ...formulaire, email: e.target.value })} placeholder="nom@exemple.cm" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50" /></div></div>
             <div><label htmlFor="ville" className="mb-1.5 block text-xs font-semibold text-slate-700">Ville</label><input id="ville" value={formulaire.ville} onChange={(e) => setFormulaire({ ...formulaire, ville: e.target.value })} placeholder="Ex. : Douala" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50" /></div>
+            {erreur && <p role="alert" className="rounded-xl bg-red-50 p-3 text-xs text-red-700">{erreur}</p>}
             <div className="flex justify-end gap-2 border-t border-slate-100 pt-4"><button type="button" onClick={() => setModalOuvert(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">Annuler</button><button type="submit" className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700">{editionId === null ? "Ajouter la fiche" : "Enregistrer les modifications"}</button></div>
           </form>
         </div>
