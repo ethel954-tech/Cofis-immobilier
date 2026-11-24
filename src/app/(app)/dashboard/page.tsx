@@ -86,19 +86,31 @@ export default function PageTableauDeBord() {
   const [initialise, setInitialise] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Lecture des données locales après le montage.
-    setDonnees({
-      proprietaires: lireListe(clesStockage.proprietaires),
-      immeubles: lireListe(clesStockage.immeubles),
-      unites: lireListe(clesStockage.unites),
-      locataires: lireListe(clesStockage.locataires),
-      baux: lireListe(clesStockage.baux),
-      paiements: lireListe(clesStockage.paiements),
-      depenses: lireListe(clesStockage.depenses),
-      maintenance: lireListe(clesStockage.maintenance)
-    });
-    setInitialise(true);
+    const identifiant = window.setTimeout(() => {
+      setDonnees({
+        proprietaires: lireListe(clesStockage.proprietaires),
+        immeubles: lireListe(clesStockage.immeubles),
+        unites: lireListe(clesStockage.unites),
+        locataires: lireListe(clesStockage.locataires),
+        baux: lireListe(clesStockage.baux),
+        paiements: lireListe(clesStockage.paiements),
+        depenses: lireListe(clesStockage.depenses),
+        maintenance: lireListe(clesStockage.maintenance)
+      });
+      setInitialise(true);
+    }, 0);
+    return () => window.clearTimeout(identifiant);
   }, []);
+
+  const interventionsOuvertes = useMemo(
+    () => donnees.maintenance.filter((item) => item.statut !== "Terminée"),
+    [donnees.maintenance]
+  );
+  const interventionsUrgentes = interventionsOuvertes.filter((item) => item.priorite === "Urgente");
+  const interventionsRecentes = [...interventionsOuvertes]
+    .filter((item) => typeof item.dateSignalement === "string" && typeof item.reference === "string")
+    .sort((a, b) => String(b.dateSignalement).localeCompare(String(a.dateSignalement)))
+    .slice(0, 3);
 
   const indicateurs = useMemo(() => {
     const unitesOccupees = nombreAvecStatut(donnees.unites, "Occupée");
@@ -180,6 +192,65 @@ export default function PageTableauDeBord() {
               <div className="flex items-center gap-2 text-xs font-semibold text-blue-800"><Wallet size={15} /> Prochaine étape métier</div>
               <p className="mt-2 text-[11px] leading-5 text-slate-600">Les paiements et dépenses peuvent être consultés dans leurs registres. Définir les échéances, affectations, règles de validation et rapprochements avant d'afficher des indicateurs financiers fiables.</p>
             </div>
+          </article>
+        </section>
+
+        <section className="grid gap-5 xl:grid-cols-[1.2fr_1fr]">
+          <article className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/40">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Interventions à suivre</h3>
+                <p className="mt-1 text-xs text-slate-500">Signalements non terminés dans le registre local</p>
+              </div>
+              <Link href="/maintenance" className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-800">Ouvrir le registre <ArrowUpRight size={14} /></Link>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-slate-50 p-4">
+                <p className="text-xs text-slate-500">Ouvertes</p>
+                <p className="mt-2 text-2xl font-bold text-slate-900">{initialise ? interventionsOuvertes.length : "—"}</p>
+              </div>
+              <div className="rounded-xl bg-amber-50/70 p-4">
+                <p className="text-xs text-amber-800">Priorité urgente</p>
+                <p className="mt-2 text-2xl font-bold text-amber-900">{initialise ? interventionsUrgentes.length : "—"}</p>
+              </div>
+            </div>
+            {initialise && interventionsRecentes.length > 0 ? (
+              <ul className="mt-4 divide-y divide-slate-100">
+                {interventionsRecentes.map((item, index) => (
+                  <li key={String(item.id ?? item.reference ?? index)} className="flex items-start justify-between gap-3 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold text-slate-800">{String(item.reference)}</p>
+                      <p className="mt-1 truncate text-[11px] text-slate-500">{String(item.immeuble ?? "Immeuble non précisé")} · {String(item.logement ?? "Zone non précisée")}</p>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${item.priorite === "Urgente" ? "bg-amber-50 text-amber-800" : "bg-slate-100 text-slate-600"}`}>{String(item.priorite ?? "Priorité non précisée")}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-4 rounded-xl bg-slate-50 p-4 text-xs text-slate-500">{initialise ? "Aucune intervention ouverte dans le registre." : "Chargement des données locales…"}</p>
+            )}
+          </article>
+
+          <article className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/40">
+            <div className="flex items-center gap-2">
+              <CircleAlert size={18} className="text-blue-600" />
+              <h3 className="text-sm font-bold text-slate-900">Repères opérationnels</h3>
+            </div>
+            <div className="mt-5 space-y-3">
+              <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
+                <span className="text-xs text-slate-600">Unités en maintenance (statut déclaré)</span>
+                <strong className="text-lg text-slate-900">{initialise ? nombreAvecStatut(donnees.unites, "En maintenance") : "—"}</strong>
+              </div>
+              <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
+                <span className="text-xs text-slate-600">Baux au statut actif</span>
+                <strong className="text-lg text-slate-900">{initialise ? nombreAvecStatut(donnees.baux, "Actif") : "—"}</strong>
+              </div>
+              <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
+                <span className="text-xs text-slate-600">Locataires au statut prospect</span>
+                <strong className="text-lg text-slate-900">{initialise ? nombreAvecStatut(donnees.locataires, "Prospect") : "—"}</strong>
+              </div>
+            </div>
+            <p className="mt-4 text-[10px] leading-5 text-slate-400">Ces repères reprennent les statuts saisis. Ils ne déclenchent aucune décision automatique sur les contrats ou les logements.</p>
           </article>
         </section>
 
