@@ -4,7 +4,8 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
-import { AlertCircle, CalendarDays, CheckCircle2, CirclePlus, Clock3, Search, Wrench, X } from "lucide-react";
+import { AlertCircle, CalendarDays, CheckCircle2, CirclePlus, Clock3, Download, Search, Wrench, X } from "lucide-react";
+import { exporterCsv } from "@/lib/export/csv";
 
 type StatutIntervention = "Nouvelle" | "Planifiée" | "En cours" | "Terminée";
 type Priorite = "Basse" | "Normale" | "Urgente";
@@ -22,6 +23,14 @@ type Intervention = {
 type Formulaire = Omit<Intervention, "id" | "reference" | "statut">;
 
 const CLE = "cofis_demo_maintenance_v1";
+const categoriesAutorisees = ["Plomberie", "Électricité", "Menuiserie", "Nettoyage", "Sécurité", "Entretien", "Autre"] as const;
+const prioritesAutorisees: readonly Priorite[] = ["Basse", "Normale", "Urgente"];
+const statutsAutorises: readonly StatutIntervention[] = ["Nouvelle", "Planifiée", "En cours", "Terminée"];
+function dateValide(date: string) {
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)) return false;
+  const valeur = new Date(`${date}T12:00:00`);
+  return !Number.isNaN(valeur.getTime()) && valeur.toISOString().slice(0, 10) === date;
+}
 const exemples: Intervention[] = [
   { id: 1, reference: "INT-DEMO-001", immeuble: "Résidence Les Manguiers", logement: "LM-A01", categorie: "Plomberie", priorite: "Urgente", dateSignalement: "2026-11-18", description: "Fuite signalée sous l'évier de la cuisine (exemple fictif).", statut: "En cours" },
   { id: 2, reference: "INT-DEMO-002", immeuble: "Immeuble Bonapriso", logement: "IB-B03", categorie: "Électricité", priorite: "Normale", dateSignalement: "2026-11-20", description: "Vérification d'un interrupteur dans le séjour.", statut: "Planifiée" },
@@ -59,7 +68,24 @@ export default function PageMaintenance() {
         const brut = localStorage.getItem(CLE);
         if (brut) {
           const valeur: unknown = JSON.parse(brut);
-          if (Array.isArray(valeur)) setInterventions(valeur as Intervention[]);
+          if (Array.isArray(valeur)) {
+            const valides = valeur.filter((element): element is Intervention => {
+              if (typeof element !== "object" || element === null || Array.isArray(element)) return false;
+              const item = element as Partial<Intervention>;
+              return Number.isSafeInteger(item.id)
+                && typeof item.reference === "string"
+                && typeof item.immeuble === "string"
+                && typeof item.logement === "string"
+                && typeof item.categorie === "string"
+                && categoriesAutorisees.includes(item.categorie as typeof categoriesAutorisees[number])
+                && prioritesAutorisees.includes(item.priorite as Priorite)
+                && typeof item.dateSignalement === "string"
+                && dateValide(item.dateSignalement)
+                && typeof item.description === "string"
+                && statutsAutorises.includes(item.statut as StatutIntervention);
+            });
+            setInterventions(valides);
+          }
         }
       } catch { /* Conserver les exemples si le stockage est illisible. */ }
       setInitialise(true);
@@ -75,7 +101,7 @@ export default function PageMaintenance() {
   const listeFiltree = useMemo(() => {
     const terme = recherche.trim().toLocaleLowerCase("fr");
     return interventions.filter((item) => {
-      const correspond = !terme || [item.reference, item.immeuble, item.logement, item.categorie, item.description].some((valeur) => valeur.toLocaleLowerCase("fr").includes(terme));
+      const correspond = !terme || [item.reference, item.immeuble, item.logement, item.categorie, item.priorite, item.statut, item.description].some((valeur) => valeur.toLocaleLowerCase("fr").includes(terme));
       return correspond && (filtreStatut === "Tous" || item.statut === filtreStatut);
     }).sort((a, b) => b.dateSignalement.localeCompare(a.dateSignalement));
   }, [interventions, recherche, filtreStatut]);
@@ -89,6 +115,14 @@ export default function PageMaintenance() {
     setErreur("");
     if (!formulaire.immeuble.trim() || !formulaire.dateSignalement || !formulaire.description.trim()) {
       setErreur("Renseignez l'immeuble, la date et la description du signalement.");
+      return;
+    }
+    if (!dateValide(formulaire.dateSignalement)) {
+      setErreur("La date du signalement doit être une date calendaire valide.");
+      return;
+    }
+    if (!categoriesAutorisees.includes(formulaire.categorie as typeof categoriesAutorisees[number]) || !prioritesAutorisees.includes(formulaire.priorite)) {
+      setErreur("La catégorie ou la priorité sélectionnée n'est pas valide.");
       return;
     }
     const id = Date.now();
@@ -109,6 +143,11 @@ export default function PageMaintenance() {
   const nombreActif = interventions.filter((item) => item.statut !== "Terminée").length;
   const nombreUrgent = interventions.filter((item) => item.priorite === "Urgente" && item.statut !== "Terminée").length;
   const nombreTermine = interventions.filter((item) => item.statut === "Terminée").length;
+  const exporter = () => exporterCsv({
+    nomFichier: "cofis-interventions-demo.csv",
+    entetes: ["Référence", "Date du signalement", "Immeuble", "Logement / zone", "Catégorie", "Priorité", "Statut", "Description"],
+    lignes: listeFiltree.map((item) => [item.reference, item.dateSignalement, item.immeuble, item.logement, item.categorie, item.priorite, item.statut, item.description])
+  });
 
   return <CadreApplication>
     <div className="space-y-6">
@@ -118,7 +157,10 @@ export default function PageMaintenance() {
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">Suivi des interventions</h2>
           <p className="mt-1 text-sm text-slate-500">Centralisez les signalements et suivez leur état d'avancement.</p>
         </div>
-        <button type="button" onClick={() => { setErreur(""); setFormulaire(formulaireVide()); setModalOuvert(true); }} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:bg-blue-700"><CirclePlus size={17} /> Nouveau signalement</button>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={exporter} disabled={!initialise || listeFiltree.length === 0} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"><Download size={16} /> Exporter CSV</button>
+          <button type="button" onClick={() => { setErreur(""); setFormulaire(formulaireVide()); setModalOuvert(true); }} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:bg-blue-700"><CirclePlus size={17} /> Nouveau signalement</button>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
@@ -136,7 +178,7 @@ export default function PageMaintenance() {
         <div className="flex flex-col gap-3 border-b border-slate-100 p-4 lg:flex-row lg:items-center lg:justify-between">
           <div><h3 className="text-sm font-bold text-slate-900">Registre des interventions</h3><p className="mt-1 text-xs text-slate-400">{listeFiltree.length} signalement(s) affiché(s)</p></div>
           <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
-            <div className="relative min-w-0 flex-1 sm:w-64"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Référence, immeuble, logement..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100" /></div>
+            <div className="relative min-w-0 flex-1 sm:w-64"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Référence, immeuble, priorité, statut..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100" /></div>
             <select aria-label="Filtrer par statut" value={filtreStatut} onChange={(e) => setFiltreStatut(e.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-600 outline-none focus:border-blue-400"><option value="Tous">Tous les statuts</option><option>Nouvelle</option><option>Planifiée</option><option>En cours</option><option>Terminée</option></select>
           </div>
         </div>
