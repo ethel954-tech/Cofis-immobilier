@@ -27,9 +27,10 @@ const categoriesAutorisees = ["Plomberie", "Électricité", "Menuiserie", "Netto
 const prioritesAutorisees: readonly Priorite[] = ["Basse", "Normale", "Urgente"];
 const statutsAutorises: readonly StatutIntervention[] = ["Nouvelle", "Planifiée", "En cours", "Terminée"];
 function dateValide(date: string) {
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)) return false;
-  const valeur = new Date(`${date}T12:00:00`);
-  return !Number.isNaN(valeur.getTime()) && valeur.toISOString().slice(0, 10) === date;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+  const [annee, mois, jour] = date.split("-").map(Number);
+  const valeur = new Date(annee, mois - 1, jour);
+  return valeur.getFullYear() === annee && valeur.getMonth() === mois - 1 && valeur.getDate() === jour;
 }
 const exemples: Intervention[] = [
   { id: 1, reference: "INT-DEMO-001", immeuble: "Résidence Les Manguiers", logement: "LM-A01", categorie: "Plomberie", priorite: "Urgente", dateSignalement: "2026-11-18", description: "Fuite signalée sous l'évier de la cuisine (exemple fictif).", statut: "En cours" },
