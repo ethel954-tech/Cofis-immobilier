@@ -11,7 +11,6 @@ import { depotUnitesDemo, type StatutUnite, type TypeUnite, type Unite } from "@
 
 const formulaireVide = { reference: "", immeubleId: "", type: "Appartement" as TypeUnite, etage: "", surface: "", loyerMensuel: "", statut: "Disponible" as StatutUnite };
 const montant = (valeur: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(valeur) + " FCFA";
-const montant = (valeur: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(valeur) + " FCFA";
 
 export default function PageUnites() {
   const [unites, setUnites] = useState<Unite[]>([]);
