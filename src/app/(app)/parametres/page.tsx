@@ -5,25 +5,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 import { Building2, CheckCircle2, Save, ShieldCheck, SlidersHorizontal } from "lucide-react";
-
-type ParametresAgence = {
-  nom: string;
-  telephone: string;
-  email: string;
-  adresse: string;
-  ville: string;
-  devise: "XAF";
-};
-
-const CLE = "cofis_demo_parametres_agence_v1";
-const valeursInitiales: ParametresAgence = {
-  nom: "COFIS IMMOBILIER",
-  telephone: "",
-  email: "",
-  adresse: "",
-  ville: "Yaoundé",
-  devise: "XAF"
-};
+import { depotParametresAgenceDemo, type ParametresAgence } from "@/lib/donnees/parametres-agence";
 
 const roles = [
   { nom: "Administrateur", description: "Administration générale et configuration de la plateforme.", acces: ["Vue d'ensemble", "Patrimoine", "Location", "Finance", "Rapports", "Administration"] },
@@ -34,30 +16,18 @@ const roles = [
 
 export default function PageParametres() {
   const [onglet, setOnglet] = useState<"agence" | "roles">("agence");
-  const [formulaire, setFormulaire] = useState<ParametresAgence>(valeursInitiales);
+  const [formulaire, setFormulaire] = useState<ParametresAgence>({ nom: "COFIS IMMOBILIER", telephone: "", email: "", adresse: "", ville: "Yaoundé", devise: "XAF" });
   const [initialise, setInitialise] = useState(false);
   const [enregistre, setEnregistre] = useState(false);
 
   useEffect(() => {
-    const identifiant = window.setTimeout(() => {
-      try {
-        const brut = localStorage.getItem(CLE);
-        if (brut) {
-          const valeur: unknown = JSON.parse(brut);
-          if (typeof valeur === "object" && valeur !== null && !Array.isArray(valeur)) {
-            setFormulaire({ ...valeursInitiales, ...(valeur as Partial<ParametresAgence>) });
-          }
-        }
-      } catch { /* Conserver les paramètres initiaux. */ }
-      setInitialise(true);
-    }, 0);
-    return () => window.clearTimeout(identifiant);
+    void depotParametresAgenceDemo.lire().then(setFormulaire).finally(() => setInitialise(true));
   }, []);
 
-  const enregistrer = (evenement: FormEvent<HTMLFormElement>) => {
+  const enregistrer = async (evenement: FormEvent<HTMLFormElement>) => {
     evenement.preventDefault();
     try {
-      localStorage.setItem(CLE, JSON.stringify(formulaire));
+      await depotParametresAgenceDemo.enregistrer(formulaire);
       setEnregistre(true);
       window.setTimeout(() => setEnregistre(false), 2800);
     } catch {
