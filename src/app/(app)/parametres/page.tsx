@@ -5,7 +5,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 import { Building2, CheckCircle2, Save, ShieldCheck, SlidersHorizontal } from "lucide-react";
-import { depotParametresAgenceDemo, type ParametresAgence } from "@/lib/donnees/parametres-agence";
+import { depotParametresAgenceDemo, parametresAgenceInitiaux, type ParametresAgence } from "@/lib/donnees/parametres-agence";
 
 const roles = [
   { nom: "Administrateur", description: "Administration générale et configuration de la plateforme.", acces: ["Vue d'ensemble", "Patrimoine", "Location", "Finance", "Rapports", "Administration"] },
@@ -16,7 +16,7 @@ const roles = [
 
 export default function PageParametres() {
   const [onglet, setOnglet] = useState<"agence" | "roles">("agence");
-  const [formulaire, setFormulaire] = useState<ParametresAgence>({ nom: "COFIS IMMOBILIER", telephone: "", email: "", adresse: "", ville: "Yaoundé", devise: "XAF" });
+  const [formulaire, setFormulaire] = useState<ParametresAgence>(parametresAgenceInitiaux);
   const [initialise, setInitialise] = useState(false);
   const [enregistre, setEnregistre] = useState(false);
 
