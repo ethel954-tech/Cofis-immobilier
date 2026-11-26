@@ -6,37 +6,24 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 import { AlertCircle, CalendarDays, CheckCircle2, CirclePlus, Clock3, Download, Search, Wrench, X } from "lucide-react";
 import { exporterCsv } from "@/lib/export/csv";
+import {
+  depotMaintenanceDemo,
+  CATEGORIES_INTERVENTION as categoriesAutorisees,
+  PRIORITES_INTERVENTION as prioritesAutorisees,
+  STATUTS_INTERVENTION as statutsAutorises,
+  type Intervention,
+  type PrioriteIntervention as Priorite,
+  type StatutIntervention
+} from "@/lib/donnees/maintenance";
 
-type StatutIntervention = "Nouvelle" | "Planifiée" | "En cours" | "Terminée";
-type Priorite = "Basse" | "Normale" | "Urgente";
-type Intervention = {
-  id: number;
-  reference: string;
-  immeuble: string;
-  logement: string;
-  categorie: string;
-  priorite: Priorite;
-  dateSignalement: string;
-  description: string;
-  statut: StatutIntervention;
-};
 type Formulaire = Omit<Intervention, "id" | "reference" | "statut">;
 
-const CLE = "cofis_demo_maintenance_v1";
-const categoriesAutorisees = ["Plomberie", "Électricité", "Menuiserie", "Nettoyage", "Sécurité", "Entretien", "Autre"] as const;
-const prioritesAutorisees: readonly Priorite[] = ["Basse", "Normale", "Urgente"];
-const statutsAutorises: readonly StatutIntervention[] = ["Nouvelle", "Planifiée", "En cours", "Terminée"];
 function dateValide(date: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
   const [annee, mois, jour] = date.split("-").map(Number);
   const valeur = new Date(annee, mois - 1, jour);
   return valeur.getFullYear() === annee && valeur.getMonth() === mois - 1 && valeur.getDate() === jour;
 }
-const exemples: Intervention[] = [
-  { id: 1, reference: "INT-DEMO-001", immeuble: "Résidence Les Manguiers", logement: "LM-A01", categorie: "Plomberie", priorite: "Urgente", dateSignalement: "2026-11-18", description: "Fuite signalée sous l'évier de la cuisine (exemple fictif).", statut: "En cours" },
-  { id: 2, reference: "INT-DEMO-002", immeuble: "Immeuble Bonapriso", logement: "IB-B03", categorie: "Électricité", priorite: "Normale", dateSignalement: "2026-11-20", description: "Vérification d'un interrupteur dans le séjour.", statut: "Planifiée" },
-  { id: 3, reference: "INT-DEMO-003", immeuble: "Résidence Les Manguiers", logement: "Parties communes", categorie: "Entretien", priorite: "Basse", dateSignalement: "2026-11-21", description: "Remplacement d'une ampoule dans l'escalier.", statut: "Terminée" }
-];
 const dateLocale = () => {
   const date = new Date();
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -55,7 +42,7 @@ const couleursPriorite: Record<Priorite, string> = {
 };
 
 export default function PageMaintenance() {
-  const [interventions, setInterventions] = useState<Intervention[]>(exemples);
+  const [interventions, setInterventions] = useState<Intervention[]>([]);
   const [initialise, setInitialise] = useState(false);
   const [recherche, setRecherche] = useState("");
   const [filtreStatut, setFiltreStatut] = useState("Tous");
@@ -64,39 +51,14 @@ export default function PageMaintenance() {
   const [erreur, setErreur] = useState("");
 
   useEffect(() => {
-    const identifiant = window.setTimeout(() => {
-      try {
-        const brut = localStorage.getItem(CLE);
-        if (brut) {
-          const valeur: unknown = JSON.parse(brut);
-          if (Array.isArray(valeur)) {
-            const valides = valeur.filter((element): element is Intervention => {
-              if (typeof element !== "object" || element === null || Array.isArray(element)) return false;
-              const item = element as Partial<Intervention>;
-              return Number.isSafeInteger(item.id)
-                && typeof item.reference === "string"
-                && typeof item.immeuble === "string"
-                && typeof item.logement === "string"
-                && typeof item.categorie === "string"
-                && categoriesAutorisees.includes(item.categorie as typeof categoriesAutorisees[number])
-                && prioritesAutorisees.includes(item.priorite as Priorite)
-                && typeof item.dateSignalement === "string"
-                && dateValide(item.dateSignalement)
-                && typeof item.description === "string"
-                && statutsAutorises.includes(item.statut as StatutIntervention);
-            });
-            setInterventions(valides);
-          }
-        }
-      } catch { /* Conserver les exemples si le stockage est illisible. */ }
-      setInitialise(true);
-    }, 0);
-    return () => window.clearTimeout(identifiant);
+    void depotMaintenanceDemo.lister().then(setInterventions).finally(() => setInitialise(true));
   }, []);
 
   useEffect(() => {
     if (!initialise) return;
-    try { localStorage.setItem(CLE, JSON.stringify(interventions)); } catch { /* Stockage local indisponible. */ }
+    void depotMaintenanceDemo.enregistrer(interventions).catch(() => {
+      // Le dépôt signale déjà l'indisponibilité du stockage local.
+    });
   }, [interventions, initialise]);
 
   const listeFiltree = useMemo(() => {
