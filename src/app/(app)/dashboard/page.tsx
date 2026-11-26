@@ -19,29 +19,25 @@ import {
 } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 
-type Enregistrement = Record<string, unknown>;
+import { depotProprietairesDemo, type Proprietaire } from "@/lib/donnees/proprietaires";
+import { depotImmeublesDemo, type Immeuble } from "@/lib/donnees/immeubles";
+import { depotUnitesDemo, type Unite } from "@/lib/donnees/unites";
+import { depotLocatairesDemo, type Locataire } from "@/lib/donnees/locataires";
+import { depotBauxDemo, type Bail } from "@/lib/donnees/baux";
+import { depotPaiementsDemo, type Paiement } from "@/lib/donnees/paiements";
+import { depotDepensesDemo, type Depense } from "@/lib/donnees/depenses";
+import { depotMaintenanceDemo, type Intervention } from "@/lib/donnees/maintenance";
 
 type DonneesTableau = {
-  proprietaires: Enregistrement[];
-  immeubles: Enregistrement[];
-  unites: Enregistrement[];
-  locataires: Enregistrement[];
-  baux: Enregistrement[];
-  paiements: Enregistrement[];
-  depenses: Enregistrement[];
-  maintenance: Enregistrement[];
+  proprietaires: Proprietaire[];
+  immeubles: Immeuble[];
+  unites: Unite[];
+  locataires: Locataire[];
+  baux: Bail[];
+  paiements: Paiement[];
+  depenses: Depense[];
+  maintenance: Intervention[];
 };
-
-const clesStockage = {
-  proprietaires: "cofis_demo_proprietaires_v1",
-  immeubles: "cofis_demo_immeubles_v1",
-  unites: "cofis_demo_unites_v1",
-  locataires: "cofis_demo_locataires_v1",
-  baux: "cofis_demo_baux_v1",
-  paiements: "cofis_demo_paiements_v1",
-  depenses: "cofis_demo_depenses_v1",
-  maintenance: "cofis_demo_maintenance_v1"
-} as const;
 
 const donneesVides: DonneesTableau = {
   proprietaires: [],
@@ -54,18 +50,7 @@ const donneesVides: DonneesTableau = {
   maintenance: []
 };
 
-function lireListe(cle: string): Enregistrement[] {
-  try {
-    const valeur: unknown = JSON.parse(window.localStorage.getItem(cle) ?? "null");
-    return Array.isArray(valeur)
-      ? valeur.filter((element): element is Enregistrement => typeof element === "object" && element !== null && !Array.isArray(element))
-      : [];
-  } catch {
-    return [];
-  }
-}
-
-function nombreAvecStatut(elements: Enregistrement[], statut: string) {
+function nombreAvecStatut<T extends { statut: string }>(elements: T[], statut: string) {
   return elements.filter((element) => element.statut === statut).length;
 }
 
@@ -86,20 +71,18 @@ export default function PageTableauDeBord() {
   const [initialise, setInitialise] = useState(false);
 
   useEffect(() => {
-    const identifiant = window.setTimeout(() => {
-      setDonnees({
-        proprietaires: lireListe(clesStockage.proprietaires),
-        immeubles: lireListe(clesStockage.immeubles),
-        unites: lireListe(clesStockage.unites),
-        locataires: lireListe(clesStockage.locataires),
-        baux: lireListe(clesStockage.baux),
-        paiements: lireListe(clesStockage.paiements),
-        depenses: lireListe(clesStockage.depenses),
-        maintenance: lireListe(clesStockage.maintenance)
-      });
-      setInitialise(true);
-    }, 0);
-    return () => window.clearTimeout(identifiant);
+    void Promise.all([
+      depotProprietairesDemo.lister(),
+      depotImmeublesDemo.lister(),
+      depotUnitesDemo.lister(),
+      depotLocatairesDemo.lister(),
+      depotBauxDemo.lister(),
+      depotPaiementsDemo.lister(),
+      depotDepensesDemo.lister(),
+      depotMaintenanceDemo.lister()
+    ]).then(([proprietaires, immeubles, unites, locataires, baux, paiements, depenses, maintenance]) => {
+      setDonnees({ proprietaires, immeubles, unites, locataires, baux, paiements, depenses, maintenance });
+    }).finally(() => setInitialise(true));
   }, []);
 
   const interventionsOuvertes = useMemo(
