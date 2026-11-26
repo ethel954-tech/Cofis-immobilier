@@ -43,6 +43,8 @@ export default function PageConnexion() {
           <div className="mt-9 space-y-3">
             <Link href="/demo" className="flex h-12 w-full items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-lg shadow-blue-600/15 transition hover:bg-blue-700">Accéder à la démonstration</Link>
             <p className="text-center text-[11px] leading-5 text-slate-400">Aucun compte n'est nécessaire pour cette présentation.</p>
+            <Link href="/espace-proprietaire" className="flex h-12 w-full items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-sm font-semibold text-blue-800 transition hover:border-blue-300 hover:bg-blue-100">Aperçu de l’espace propriétaire</Link>
+            <p className="text-center text-[11px] leading-5 text-slate-400">Accès de démonstration uniquement, sans authentification réelle.</p>
           </div>
 
           <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
