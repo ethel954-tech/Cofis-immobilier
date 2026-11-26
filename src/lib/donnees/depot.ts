@@ -50,3 +50,48 @@ export function creerDepotDemo<T>({
     }
   };
 }
+
+
+/** Contrat pour une valeur unique, comme le profil de l'agence. */
+export interface DepotValeur<T> {
+  lire(): Promise<T>;
+  enregistrer(valeur: T): Promise<void>;
+}
+
+interface OptionsDepotValeurDemo<T> {
+  cle: string;
+  valeurInitiale: T;
+  valider(valeur: unknown): valeur is T;
+}
+
+/** Adaptateur local pour une valeur unique, sans changer le format historique stocké. */
+export function creerDepotValeurDemo<T>({
+  cle,
+  valeurInitiale,
+  valider
+}: OptionsDepotValeurDemo<T>): DepotValeur<T> {
+  return {
+    async lire(): Promise<T> {
+      if (typeof window === "undefined") return valeurInitiale;
+
+      try {
+        const contenu = window.localStorage.getItem(cle);
+        if (contenu === null) return valeurInitiale;
+        const valeur: unknown = JSON.parse(contenu);
+        return valider(valeur) ? valeur : valeurInitiale;
+      } catch {
+        return valeurInitiale;
+      }
+    },
+
+    async enregistrer(valeur: T): Promise<void> {
+      if (typeof window === "undefined") return;
+
+      try {
+        window.localStorage.setItem(cle, JSON.stringify(valeur));
+      } catch {
+        throw new Error("Impossible d'enregistrer la valeur dans le stockage local.");
+      }
+    }
+  };
+}
