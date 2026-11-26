@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CirclePlus, Search, X, Receipt, ClipboardList, Download } from "lucide-react";
 import { exporterCsv } from "@/lib/export/csv";
 import { CadreApplication } from "@/components/layout/CadreApplication";
-import { depotDepensesDemo, CATEGORIES_DEPENSES, type Depense } from "@/lib/donnees/depenses";
+import { depotDepensesDemo, CATEGORIES_DEPENSES, type Depense, type CategorieDepense } from "@/lib/donnees/depenses";
 
 type FormulaireDepense = Omit<Depense, "id">;
 
@@ -79,7 +79,7 @@ export default function PageDepenses() {
     setErreur("");
     const reference = formulaire.reference.trim();
     const description = formulaire.description.trim();
-    const categorie = formulaire.categorie.trim();
+    const categorie = formulaire.categorie;
     const referenceNormalisee = reference.toLocaleLowerCase("fr");
     if (!reference || !dateIsoValide(formulaire.dateDepense) || !description || !CATEGORIES_DEPENSES.includes(categorie)) {
       setErreur("Renseignez une référence, une date valide, une catégorie et une description.");
@@ -152,7 +152,7 @@ export default function PageDepenses() {
               <div><label htmlFor="date-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Date déclarée *</label><input id="date-depense" type="date" required value={formulaire.dateDepense} onChange={(e) => setFormulaire({ ...formulaire, dateDepense: e.target.value })} aria-describedby="aide-date-depense" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /><span id="aide-date-depense" className="mt-1 block text-[10px] text-slate-400">La date doit correspondre à un jour du calendrier valide.</span></div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div><label htmlFor="categorie-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Catégorie *</label><select id="categorie-depense" required value={formulaire.categorie} onChange={(e) => setFormulaire({ ...formulaire, categorie: e.target.value })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">{CATEGORIES_DEPENSES.map((categorie) => <option key={categorie}>{categorie}</option>)}</select></div>
+              <div><label htmlFor="categorie-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Catégorie *</label><select id="categorie-depense" required value={formulaire.categorie} onChange={(e) => setFormulaire({ ...formulaire, categorie: e.target.value as CategorieDepense })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">{CATEGORIES_DEPENSES.map((categorie) => <option key={categorie}>{categorie}</option>)}</select></div>
               <div><label htmlFor="montant-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Montant déclaré (FCFA) *</label><input id="montant-depense" type="number" min="1" step="1" required value={formulaire.montant || ""} onChange={(e) => setFormulaire({ ...formulaire, montant: e.target.value === "" ? 0 : Number(e.target.value) })} placeholder="45000" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
             </div>
             <div><label htmlFor="description-depense" className="mb-1.5 block text-xs font-semibold text-slate-700">Description *</label><input id="description-depense" required value={formulaire.description} onChange={(e) => setFormulaire({ ...formulaire, description: e.target.value })} placeholder="Ex. : réparation d'une fuite d'eau" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
