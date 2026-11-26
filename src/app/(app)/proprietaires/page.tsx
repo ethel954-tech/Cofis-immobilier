@@ -74,7 +74,7 @@ export default function PageProprietaires() {
         const donneesEnregistrees = window.localStorage.getItem(CLE_STOCKAGE_PROPRIETAIRES);
         if (donneesEnregistrees) {
           const proprietairesEnregistres: unknown = JSON.parse(donneesEnregistrees);
-          if (donneesProprietairesValides(proprietairesEnregistrees)) {
+          if (donneesProprietairesValides(proprietairesEnregistres)) {
             setProprietaires(proprietairesEnregistres);
           }
         }
