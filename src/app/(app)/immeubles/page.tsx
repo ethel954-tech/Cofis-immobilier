@@ -6,36 +6,15 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Building2, CirclePlus, MapPin, Pencil, Search, X, Users, Home, Layers3, Download } from "lucide-react";
 import { exporterCsv } from "@/lib/export/csv";
 import { CadreApplication } from "@/components/layout/CadreApplication";
+import { depotImmeublesDemo, type Immeuble, type TypeBien } from "@/lib/donnees/immeubles";
+import { depotProprietairesDemo } from "@/lib/donnees/proprietaires";
+import type { Proprietaire } from "@/lib/donnees/proprietaires";
 
-type TypeBien = "Résidentiel" | "Commercial" | "Mixte";
-type Proprietaire = { id: number; nom: string; type: "Particulier" | "Société"; telephone: string; email: string; ville: string; biens: number };
-type Immeuble = {
-  id: number;
-  nom: string;
-  type: TypeBien;
-  adresse: string;
-  ville: string;
-  proprietaireId: number;
-  nombreUnites: number;
-  statut: "Actif" | "Inactif";
-};
-const CLE_IMMEUBLES = "cofis_demo_immeubles_v1";
-const CLE_PROPRIETAIRES = "cofis_demo_proprietaires_v1";
-const proprietairesExemple: Proprietaire[] = [
-  { id: 1, nom: "Exemple — Jean Mbarga", type: "Particulier", telephone: "", email: "", ville: "Yaoundé", biens: 3 },
-  { id: 2, nom: "Exemple — Société Immobilière", type: "Société", telephone: "", email: "", ville: "Douala", biens: 8 },
-  { id: 3, nom: "Exemple — Marie Nguemo", type: "Particulier", telephone: "", email: "", ville: "Bafoussam", biens: 1 },
-];
-const immeublesExemple: Immeuble[] = [
-  { id: 101, nom: "Résidence Les Manguiers", type: "Résidentiel", adresse: "Quartier Bastos", ville: "Yaoundé", proprietaireId: 1, nombreUnites: 12, statut: "Actif" },
-  { id: 102, nom: "Immeuble Bonapriso", type: "Mixte", adresse: "Rue Koloko, Bonapriso", ville: "Douala", proprietaireId: 2, nombreUnites: 8, statut: "Actif" },
-  { id: 103, nom: "Centre commercial Étoile", type: "Commercial", adresse: "Avenue Kennedy", ville: "Yaoundé", proprietaireId: 2, nombreUnites: 15, statut: "Actif" },
-];
 const formulaireVide = { nom: "", type: "Résidentiel" as TypeBien, adresse: "", ville: "", proprietaireId: "", nombreUnites: "1", statut: "Actif" as Immeuble["statut"] };
 
 export default function PageImmeubles() {
-  const [immeubles, setImmeubles] = useState<Immeuble[]>(immeublesExemple);
-  const [proprietaires, setProprietaires] = useState<Proprietaire[]>(proprietairesExemple);
+  const [immeubles, setImmeubles] = useState<Immeuble[]>([]);
+  const [proprietaires, setProprietaires] = useState<Proprietaire[]>([]);
   const [initialise, setInitialise] = useState(false);
   const [recherche, setRecherche] = useState("");
   const [filtreType, setFiltreType] = useState<"Tous" | TypeBien>("Tous");
@@ -45,30 +24,29 @@ export default function PageImmeubles() {
   const [erreurFormulaire, setErreurFormulaire] = useState("");
 
   useEffect(() => {
-    const temporisateur = window.setTimeout(() => {
-      try {
-        const biensStockes = localStorage.getItem(CLE_IMMEUBLES);
-        const proprietairesStockes = localStorage.getItem(CLE_PROPRIETAIRES);
-        if (biensStockes) {
-          const parsed: unknown = JSON.parse(biensStockes);
-          if (Array.isArray(parsed)) setImmeubles(parsed as Immeuble[]);
-        }
-        if (proprietairesStockes) {
-          const parsed: unknown = JSON.parse(proprietairesStockes);
-          if (Array.isArray(parsed) && parsed.length) setProprietaires(parsed as Proprietaire[]);
-        }
-      } catch {
-        // Conserver les exemples si les données locales sont illisibles.
-      } finally {
-        setInitialise(true);
-      }
-    }, 0);
-    return () => window.clearTimeout(temporisateur);
+    let actif = true;
+
+    void Promise.all([
+      depotImmeublesDemo.lister(),
+      depotProprietairesDemo.lister()
+    ]).then(([biens, personnes]) => {
+      if (!actif) return;
+      setImmeubles(biens);
+      setProprietaires(personnes);
+    }).finally(() => {
+      if (actif) setInitialise(true);
+    });
+
+    return () => {
+      actif = false;
+    };
   }, []);
 
   useEffect(() => {
     if (!initialise) return;
-    try { localStorage.setItem(CLE_IMMEUBLES, JSON.stringify(immeubles)); } catch { /* Stockage local indisponible. */ }
+    void depotImmeublesDemo.enregistrer(immeubles).catch(() => {
+      // L'interface reste utilisable même si le navigateur bloque le stockage local.
+    });
   }, [immeubles, initialise]);
 
   const immeublesFiltres = useMemo(() => immeubles.filter((bien) => {
