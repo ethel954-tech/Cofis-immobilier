@@ -6,21 +6,11 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Building2, CirclePlus, Mail, MapPin, Pencil, Phone, Search, Trash2, Users, X, Download } from "lucide-react";
 import { exporterCsv } from "@/lib/export/csv";
 import { CadreApplication } from "@/components/layout/CadreApplication";
-
-type TypeLocataire = "Particulier" | "Entreprise";
-type StatutLocataire = "Prospect" | "Actif" | "Inactif";
-type Locataire = { id: number; nom: string; type: TypeLocataire; telephone: string; email: string; ville: string; statut: StatutLocataire };
-
-const CLE_LOCATAIRES = "cofis_demo_locataires_v1";
-const locatairesExemple: Locataire[] = [
-  { id: 301, nom: "Exemple — Alice Tchoumi", type: "Particulier", telephone: "+237 6 70 00 00 11", email: "alice.exemple@cofis.cm", ville: "Yaoundé", statut: "Actif" },
-  { id: 302, nom: "Exemple — Cabinet Horizon", type: "Entreprise", telephone: "+237 6 90 00 00 22", email: "contact.horizon@cofis.cm", ville: "Douala", statut: "Prospect" },
-  { id: 303, nom: "Exemple — Paul Ndom", type: "Particulier", telephone: "+237 6 80 00 00 33", email: "paul.exemple@cofis.cm", ville: "Bafoussam", statut: "Inactif" },
-];
+import { depotLocatairesDemo, type Locataire, type TypeLocataire, type StatutLocataire } from "@/lib/donnees/locataires";
 const formulaireVide = { nom: "", type: "Particulier" as TypeLocataire, telephone: "", email: "", ville: "", statut: "Prospect" as StatutLocataire };
 
 export default function PageLocataires() {
-  const [locataires, setLocataires] = useState<Locataire[]>(locatairesExemple);
+  const [locataires, setLocataires] = useState<Locataire[]>([]);
   const [initialise, setInitialise] = useState(false);
   const [recherche, setRecherche] = useState("");
   const [filtreStatut, setFiltreStatut] = useState<"Tous" | StatutLocataire>("Tous");
@@ -30,25 +20,14 @@ export default function PageLocataires() {
   const [erreurFormulaire, setErreurFormulaire] = useState("");
 
   useEffect(() => {
-    const temporisateur = window.setTimeout(() => {
-      try {
-        const stock = localStorage.getItem(CLE_LOCATAIRES);
-        if (stock) {
-          const parsed: unknown = JSON.parse(stock);
-          if (Array.isArray(parsed)) setLocataires(parsed as Locataire[]);
-        }
-      } catch {
-        // Conserver les exemples si les données locales sont illisibles.
-      } finally {
-        setInitialise(true);
-      }
-    }, 0);
-    return () => window.clearTimeout(temporisateur);
+    void depotLocatairesDemo.lister().then(setLocataires).finally(() => setInitialise(true));
   }, []);
 
   useEffect(() => {
     if (!initialise) return;
-    try { localStorage.setItem(CLE_LOCATAIRES, JSON.stringify(locataires)); } catch { /* Stockage local indisponible. */ }
+    void depotLocatairesDemo.enregistrer(locataires).catch(() => {
+      // Le dépôt signale déjà l'indisponibilité du stockage local.
+    });
   }, [locataires, initialise]);
 
   const locatairesFiltres = useMemo(() => locataires.filter((locataire) => {
