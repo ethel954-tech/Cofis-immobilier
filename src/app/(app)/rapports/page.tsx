@@ -31,9 +31,23 @@ export default function PageRapports(){
  const [pret,setPret]=useState(false);
  useEffect(()=>{
   const identifiant=window.setTimeout(()=>{
-   const lire=<T,>(cle:string,defaut:T):T=>{
-    try{const brut=localStorage.getItem(cle);if(!brut)return defaut;const v:unknown=JSON.parse(brut);return Array.isArray(v)?v.filter((element):element is T=>typeof element==="object"&&element!==null&&!Array.isArray(element)):defaut;}
-    catch{return defaut;}
+   const lire = <T extends object,>(cle: string, defaut: T[]): T[] => {
+    try {
+     const brut = localStorage.getItem(cle);
+     if (!brut) return defaut;
+
+     const donnees: unknown = JSON.parse(brut);
+     if (!Array.isArray(donnees)) return defaut;
+
+     return donnees.filter(
+      (element): element is T =>
+       typeof element === "object" &&
+       element !== null &&
+       !Array.isArray(element)
+     );
+    } catch {
+     return defaut;
+    }
    };
    setDonnees({immeubles:lire("cofis_demo_immeubles_v1",exemples.immeubles),unites:lire("cofis_demo_unites_v1",exemples.unites),locataires:lire("cofis_demo_locataires_v1",exemples.locataires),baux:lire("cofis_demo_baux_v1",exemples.baux)});
    setPaiements(lire("cofis_demo_paiements_v1",[]));
