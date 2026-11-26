@@ -6,31 +6,15 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CirclePlus, Search, X, Receipt, ClipboardList, Download } from "lucide-react";
 import { exporterCsv } from "@/lib/export/csv";
 import { CadreApplication } from "@/components/layout/CadreApplication";
+import { depotDepensesDemo, CATEGORIES_DEPENSES, type Depense } from "@/lib/donnees/depenses";
 
-type Depense = {
-  id: number;
-  reference: string;
-  dateDepense: string;
-  categorie: string;
-  description: string;
-  fournisseur: string;
-  montant: number;
-  referenceJustificatif: string;
-};
 type FormulaireDepense = Omit<Depense, "id">;
 
-const CLE_DEPENSES = "cofis_demo_depenses_v1";
-const CATEGORIES_DEPENSES = ["Entretien", "Réparation", "Nettoyage", "Sécurité", "Services", "Frais administratifs", "Autre"];
-
 function dateIsoValide(valeur: string): boolean {
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(valeur)) return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(valeur)) return false;
   const date = new Date(`${valeur}T00:00:00.000Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === valeur;
 }
-const depensesExemple: Depense[] = [
-  { id: 601, reference: "DEP-DEMO-001", dateDepense: "2026-11-03", categorie: "Entretien", description: "Réparation d'une fuite — exemple fictif", fournisseur: "Plomberie Exemple", montant: 45000, referenceJustificatif: "FACT-DEMO-03" },
-  { id: 602, reference: "DEP-DEMO-002", dateDepense: "2026-11-08", categorie: "Nettoyage", description: "Nettoyage des parties communes — exemple fictif", fournisseur: "Services Propreté", montant: 25000, referenceJustificatif: "" }
-];
 const aujourdHui = () => {
   const date = new Date();
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -47,7 +31,7 @@ const formulaireVide = (): FormulaireDepense => ({
 const formatMontant = (valeur: number) => `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(valeur)} FCFA`;
 
 export default function PageDepenses() {
-  const [depenses, setDepenses] = useState<Depense[]>(depensesExemple);
+  const [depenses, setDepenses] = useState<Depense[]>([]);
   const [initialise, setInitialise] = useState(false);
   const [recherche, setRecherche] = useState("");
   const [dateDebut, setDateDebut] = useState("");
@@ -57,22 +41,14 @@ export default function PageDepenses() {
   const [erreur, setErreur] = useState("");
 
   useEffect(() => {
-    const identifiant = window.setTimeout(() => {
-      try {
-        const brut = localStorage.getItem(CLE_DEPENSES);
-        if (brut) {
-          const valeur: unknown = JSON.parse(brut);
-          if (Array.isArray(valeur)) setDepenses(valeur as Depense[]);
-        }
-      } catch { /* Conserver les exemples si le stockage est illisible. */ }
-      setInitialise(true);
-    }, 0);
-    return () => window.clearTimeout(identifiant);
+    void depotDepensesDemo.lister().then(setDepenses).finally(() => setInitialise(true));
   }, []);
 
   useEffect(() => {
     if (!initialise) return;
-    try { localStorage.setItem(CLE_DEPENSES, JSON.stringify(depenses)); } catch { /* Stockage local indisponible. */ }
+    void depotDepensesDemo.enregistrer(depenses).catch(() => {
+      // Le dépôt signale déjà l'indisponibilité du stockage local.
+    });
   }, [depenses, initialise]);
 
   const depensesFiltrees = useMemo(() => {
