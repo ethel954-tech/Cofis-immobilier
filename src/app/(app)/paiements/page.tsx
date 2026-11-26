@@ -6,49 +6,18 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CirclePlus, Search, X, ReceiptText, WalletCards, Download } from "lucide-react";
 import { exporterCsv } from "@/lib/export/csv";
 import { CadreApplication } from "@/components/layout/CadreApplication";
+import { depotPaiementsDemo, MODES_PAIEMENT, type Paiement, type ModePaiement } from "@/lib/donnees/paiements";
+import { depotBauxDemo } from "@/lib/donnees/baux";
+import { depotLocatairesDemo } from "@/lib/donnees/locataires";
+import { depotUnitesDemo } from "@/lib/donnees/unites";
 
-type Bail = { id: number; reference: string; locataireId: number; uniteId: number; loyerMensuel: number; statut: string };
-type Locataire = { id: number; nom: string };
-type Unite = { id: number; reference: string };
-type Paiement = {
-  id: number;
-  reference: string;
-  bailId: number;
-  datePaiement: string;
-  montant: number;
-  mode: string;
-  referenceExterne: string;
-  observation: string;
-};
 type FormulairePaiement = Omit<Paiement, "id">;
-
-const CLE_PAIEMENTS = "cofis_demo_paiements_v1";
-const MODES_PAIEMENT = ["Espèces", "Virement bancaire", "Chèque", "Mobile Money", "Autre"];
 
 function dateIsoPaiementValide(valeur: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(valeur)) return false;
   const date = new Date(`${valeur}T00:00:00.000Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === valeur;
 }
-const CLE_BAUX = "cofis_demo_baux_v1";
-const CLE_LOCATAIRES = "cofis_demo_locataires_v1";
-const CLE_UNITES = "cofis_demo_unites_v1";
-const bauxExemple: Bail[] = [
-  { id: 401, reference: "BAIL-2026-001", locataireId: 301, uniteId: 201, loyerMensuel: 175000, statut: "Actif" },
-  { id: 402, reference: "BAIL-2026-002", locataireId: 302, uniteId: 205, loyerMensuel: 225000, statut: "Brouillon" }
-];
-const locatairesExemple: Locataire[] = [
-  { id: 301, nom: "Exemple — Alice Tchoumi" },
-  { id: 302, nom: "Exemple — Cabinet Horizon" }
-];
-const unitesExemple: Unite[] = [
-  { id: 201, reference: "LM-A01" },
-  { id: 205, reference: "CE-B01" }
-];
-const paiementsExemple: Paiement[] = [
-  { id: 501, reference: "PAY-DEMO-001", bailId: 401, datePaiement: "2026-11-05", montant: 175000, mode: "Virement bancaire", referenceExterne: "VIR-DEMO-0511", observation: "Exemple fictif de paiement enregistré." },
-  { id: 502, reference: "PAY-DEMO-002", bailId: 401, datePaiement: "2026-10-05", montant: 100000, mode: "Mobile Money", referenceExterne: "", observation: "Exemple fictif — aucun rapprochement effectué." }
-];
 const aujourdHui = () => {
   const date = new Date();
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -65,10 +34,10 @@ const formulaireVide = (): FormulairePaiement => ({
 const formatMontant = (valeur: number) => `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(valeur)} FCFA`;
 
 export default function PagePaiements() {
-  const [paiements, setPaiements] = useState<Paiement[]>(paiementsExemple);
-  const [baux, setBaux] = useState<Bail[]>(bauxExemple);
-  const [locataires, setLocataires] = useState<Locataire[]>(locatairesExemple);
-  const [unites, setUnites] = useState<Unite[]>(unitesExemple);
+  const [paiements, setPaiements] = useState<Paiement[]>([]);
+  const [baux, setBaux] = useState<Awaited<ReturnType<typeof depotBauxDemo.lister>>>([]);
+  const [locataires, setLocataires] = useState<Awaited<ReturnType<typeof depotLocatairesDemo.lister>>>([]);
+  const [unites, setUnites] = useState<Awaited<ReturnType<typeof depotUnitesDemo.lister>>>([]);
   const [initialise, setInitialise] = useState(false);
   const [recherche, setRecherche] = useState("");
   const [dateDebut, setDateDebut] = useState("");
@@ -78,27 +47,24 @@ export default function PagePaiements() {
   const [erreur, setErreur] = useState("");
 
   useEffect(() => {
-    const identifiant = window.setTimeout(() => {
-      const lire = <T,>(cle: string, defaut: T): T => {
-        try {
-          const brut = localStorage.getItem(cle);
-          if (!brut) return defaut;
-          const valeur: unknown = JSON.parse(brut);
-          return Array.isArray(valeur) ? valeur as T : defaut;
-        } catch { return defaut; }
-      };
-      setPaiements(lire(CLE_PAIEMENTS, paiementsExemple));
-      setBaux(lire(CLE_BAUX, bauxExemple));
-      setLocataires(lire(CLE_LOCATAIRES, locatairesExemple));
-      setUnites(lire(CLE_UNITES, unitesExemple));
-      setInitialise(true);
-    }, 0);
-    return () => window.clearTimeout(identifiant);
+    void Promise.all([
+      depotPaiementsDemo.lister(),
+      depotBauxDemo.lister(),
+      depotLocatairesDemo.lister(),
+      depotUnitesDemo.lister()
+    ]).then(([paiementsCharges, bauxCharges, locatairesCharges, unitesChargees]) => {
+      setPaiements(paiementsCharges);
+      setBaux(bauxCharges);
+      setLocataires(locatairesCharges);
+      setUnites(unitesChargees);
+    }).finally(() => setInitialise(true));
   }, []);
 
   useEffect(() => {
     if (!initialise) return;
-    try { localStorage.setItem(CLE_PAIEMENTS, JSON.stringify(paiements)); } catch { /* Stockage local indisponible. */ }
+    void depotPaiementsDemo.enregistrer(paiements).catch(() => {
+      // Le dépôt signale déjà l'indisponibilité du stockage local.
+    });
   }, [paiements, initialise]);
 
   const paiementsFiltres = useMemo(() => {
@@ -221,7 +187,7 @@ export default function PagePaiements() {
             <div><label htmlFor="bail-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Bail associé *</label><select id="bail-paiement" required value={formulaire.bailId || ""} onChange={(e) => setFormulaire({ ...formulaire, bailId: Number(e.target.value) })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="">Sélectionner un bail</option>{baux.map((bail) => <option key={bail.id} value={bail.id}>{bail.reference} — {locataires.find((locataire) => locataire.id === bail.locataireId)?.nom ?? "Locataire"}</option>)}</select></div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="montant-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Montant consigné (FCFA) *</label><input id="montant-paiement" type="number" min="1" step="1" required value={formulaire.montant || ""} onChange={(e) => setFormulaire({ ...formulaire, montant: e.target.value === "" ? 0 : Number(e.target.value) })} placeholder="150000" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
-              <div><label htmlFor="mode-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Mode déclaré *</label><select id="mode-paiement" required value={formulaire.mode} onChange={(e) => setFormulaire({ ...formulaire, mode: e.target.value })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">{MODES_PAIEMENT.map((mode) => <option key={mode}>{mode}</option>)}</select></div>
+              <div><label htmlFor="mode-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Mode déclaré *</label><select id="mode-paiement" required value={formulaire.mode} onChange={(e) => setFormulaire({ ...formulaire, mode: e.target.value as ModePaiement })} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">{MODES_PAIEMENT.map((mode) => <option key={mode}>{mode}</option>)}</select></div>
             </div>
             <div><label htmlFor="reference-externe" className="mb-1.5 block text-xs font-semibold text-slate-700">Référence externe (facultatif)</label><input id="reference-externe" value={formulaire.referenceExterne} onChange={(e) => setFormulaire({ ...formulaire, referenceExterne: e.target.value })} placeholder="Référence du reçu ou de la transaction" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm" /></div>
             <div><label htmlFor="observation-paiement" className="mb-1.5 block text-xs font-semibold text-slate-700">Observation (facultatif)</label><textarea id="observation-paiement" rows={3} value={formulaire.observation} onChange={(e) => setFormulaire({ ...formulaire, observation: e.target.value })} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm" placeholder="Information complémentaire..." /></div>
