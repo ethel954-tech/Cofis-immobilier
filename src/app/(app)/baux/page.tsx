@@ -6,46 +6,19 @@ import { useEffect, useState, type FormEvent } from "react";
 import { FileText, CirclePlus, Search, Pencil, Trash2, X, CalendarDays, Home, Users, Wallet, Download } from "lucide-react";
 import { exporterCsv } from "@/lib/export/csv";
 import { CadreApplication } from "@/components/layout/CadreApplication";
+import { depotBauxDemo, type Bail, type StatutBail } from "@/lib/donnees/baux";
+import { depotLocatairesDemo, type Locataire } from "@/lib/donnees/locataires";
+import { depotUnitesDemo, type Unite } from "@/lib/donnees/unites";
+import { depotImmeublesDemo, type Immeuble } from "@/lib/donnees/immeubles";
 
-type StatutBail = "Brouillon" | "Actif" | "Expiré" | "Résilié";
-type Locataire = { id:number; nom:string; type:"Particulier"|"Entreprise"; telephone:string; email:string; ville:string; statut:"Prospect"|"Actif"|"Inactif" };
-type Unite = { id:number; reference:string; immeubleId:number; type:string; etage:string; surface:number|null; loyerMensuel:number; statut:string };
-type Immeuble = { id:number; nom:string; ville:string; adresse:string };
-type Bail = { id:number; reference:string; locataireId:number; uniteId:number; dateDebut:string; dateFin:string; loyerMensuel:number; depotGarantie:number; statut:StatutBail; notes:string };
-
-const CLE_BAUX="cofis_demo_baux_v1";
-const CLE_LOCATAIRES="cofis_demo_locataires_v1";
-const CLE_UNITES="cofis_demo_unites_v1";
-const CLE_IMMEUBLES="cofis_demo_immeubles_v1";
-const locatairesExemple:Locataire[]=[
- {id:301,nom:"Exemple — Alice Tchoumi",type:"Particulier",telephone:"+237 6 70 00 00 11",email:"alice.exemple@cofis.cm",ville:"Yaoundé",statut:"Actif"},
- {id:302,nom:"Exemple — Cabinet Horizon",type:"Entreprise",telephone:"+237 6 90 00 00 22",email:"contact.horizon@cofis.cm",ville:"Douala",statut:"Prospect"},
- {id:303,nom:"Exemple — Paul Ndom",type:"Particulier",telephone:"+237 6 80 00 00 33",email:"paul.exemple@cofis.cm",ville:"Bafoussam",statut:"Inactif"}
-];
-const unitesExemple:Unite[]=[
- {id:201,reference:"LM-A01",immeubleId:101,type:"Appartement",etage:"1er étage",surface:85,loyerMensuel:175000,statut:"Occupée"},
- {id:202,reference:"LM-A02",immeubleId:101,type:"Appartement",etage:"1er étage",surface:72,loyerMensuel:150000,statut:"Disponible"},
- {id:203,reference:"LM-S01",immeubleId:101,type:"Studio",etage:"Rez-de-chaussée",surface:38,loyerMensuel:85000,statut:"En maintenance"},
- {id:204,reference:"IB-B03",immeubleId:102,type:"Bureau",etage:"3e étage",surface:110,loyerMensuel:300000,statut:"Occupée"},
- {id:205,reference:"CE-B01",immeubleId:103,type:"Boutique",etage:"Rez-de-chaussée",surface:45,loyerMensuel:225000,statut:"Disponible"}
-];
-const immeublesExemple:Immeuble[]=[
- {id:101,nom:"Résidence Les Manguiers",ville:"Yaoundé",adresse:"Quartier Bastos"},
- {id:102,nom:"Immeuble Bonapriso",ville:"Douala",adresse:"Rue Koloko"},
- {id:103,nom:"Centre commercial Étoile",ville:"Yaoundé",adresse:"Avenue Kennedy"}
-];
-const bauxExemple:Bail[]=[
- {id:401,reference:"BAIL-2026-001",locataireId:301,uniteId:201,dateDebut:"2026-01-01",dateFin:"2026-12-31",loyerMensuel:175000,depotGarantie:350000,statut:"Actif",notes:"Exemple fictif — bail résidentiel."},
- {id:402,reference:"BAIL-2026-002",locataireId:302,uniteId:205,dateDebut:"2026-03-01",dateFin:"2027-02-28",loyerMensuel:225000,depotGarantie:450000,statut:"Brouillon",notes:"Exemple fictif — dossier à finaliser."}
-];
 const vide={reference:"",locataireId:"",uniteId:"",dateDebut:"",dateFin:"",loyerMensuel:"",depotGarantie:"0",statut:"Brouillon" as StatutBail,notes:""};
 const montant=(n:number)=>new Intl.NumberFormat("fr-FR",{maximumFractionDigits:0}).format(n)+" FCFA";
 
 export default function PageBaux(){
- const [baux,setBaux]=useState<Bail[]>(bauxExemple);
- const [locataires,setLocataires]=useState<Locataire[]>(locatairesExemple);
- const [unites,setUnites]=useState<Unite[]>(unitesExemple);
- const [immeubles,setImmeubles]=useState<Immeuble[]>(immeublesExemple);
+ const [baux,setBaux]=useState<Bail[]>([]);
+ const [locataires,setLocataires]=useState<Locataire[]>([]);
+ const [unites,setUnites]=useState<Unite[]>([]);
+ const [immeubles,setImmeubles]=useState<Immeuble[]>([]);
  const [initialise,setInitialise]=useState(false);
  const [recherche,setRecherche]=useState("");
  const [filtre,setFiltre]=useState<"Tous"|StatutBail>("Tous");
@@ -56,14 +29,24 @@ export default function PageBaux(){
  const [form,setForm]=useState(vide);
 
  useEffect(()=>{
-  const identifiant=window.setTimeout(()=>{
-   const lire=<T,>(cle:string,defaut:T):T=>{try{const brut=localStorage.getItem(cle);if(!brut)return defaut;const valeur:unknown=JSON.parse(brut);return (Array.isArray(valeur)?valeur:defaut) as T;}catch{return defaut;}};
-   setBaux(lire(CLE_BAUX,bauxExemple));setLocataires(lire(CLE_LOCATAIRES,locatairesExemple));setUnites(lire(CLE_UNITES,unitesExemple));setImmeubles(lire(CLE_IMMEUBLES,immeublesExemple));
-   setInitialise(true);
-  },0);
-  return ()=>window.clearTimeout(identifiant);
+  void Promise.all([
+   depotBauxDemo.lister(),
+   depotLocatairesDemo.lister(),
+   depotUnitesDemo.lister(),
+   depotImmeublesDemo.lister()
+  ]).then(([bauxCharges,locatairesCharges,unitesChargees,immeublesCharges])=>{
+   setBaux(bauxCharges);
+   setLocataires(locatairesCharges);
+   setUnites(unitesChargees);
+   setImmeubles(immeublesCharges);
+  }).finally(()=>setInitialise(true));
  },[]);
- useEffect(()=>{if(initialise){try{localStorage.setItem(CLE_BAUX,JSON.stringify(baux));}catch{/* Stockage local indisponible. */}}},[baux,initialise]);
+ useEffect(()=>{
+  if(!initialise)return;
+  void depotBauxDemo.enregistrer(baux).catch(()=>{
+   // Le dépôt signale déjà l'indisponibilité du stockage local.
+  });
+ },[baux,initialise]);
 
  const nomLocataire=(id:number)=>locataires.find(x=>x.id===id)?.nom??"Locataire introuvable";
  const unite=(id:number)=>unites.find(x=>x.id===id);
