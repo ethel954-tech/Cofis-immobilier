@@ -6,41 +6,16 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Building2, CirclePlus, DoorOpen, Download, Home, Pencil, Search, Trash2, X, Wallet } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 import { exporterCsv } from "@/lib/export/csv";
+import { depotImmeublesDemo, type Immeuble } from "@/lib/donnees/immeubles";
+import { depotUnitesDemo, type StatutUnite, type TypeUnite, type Unite } from "@/lib/donnees/unites";
 
-type StatutUnite = "Disponible" | "Occupée" | "En maintenance" | "Inactive";
-type TypeUnite = "Appartement" | "Studio" | "Bureau" | "Boutique" | "Entrepôt" | "Autre";
-type Immeuble = { id: number; nom: string; ville: string; adresse: string; statut: "Actif" | "Inactif" };
-type Unite = {
-  id: number;
-  reference: string;
-  immeubleId: number;
-  type: TypeUnite;
-  etage: string;
-  surface: number | null;
-  loyerMensuel: number;
-  statut: StatutUnite;
-};
-
-const CLE_UNITES = "cofis_demo_unites_v1";
-const CLE_IMMEUBLES = "cofis_demo_immeubles_v1";
-const immeublesExemple: Immeuble[] = [
-  { id: 101, nom: "Résidence Les Manguiers", ville: "Yaoundé", adresse: "Quartier Bastos", statut: "Actif" },
-  { id: 102, nom: "Immeuble Bonapriso", ville: "Douala", adresse: "Rue Koloko, Bonapriso", statut: "Actif" },
-  { id: 103, nom: "Centre commercial Étoile", ville: "Yaoundé", adresse: "Avenue Kennedy", statut: "Actif" },
-];
-const unitesExemple: Unite[] = [
-  { id: 201, reference: "LM-A01", immeubleId: 101, type: "Appartement", etage: "1er étage", surface: 85, loyerMensuel: 175000, statut: "Occupée" },
-  { id: 202, reference: "LM-A02", immeubleId: 101, type: "Appartement", etage: "1er étage", surface: 72, loyerMensuel: 150000, statut: "Disponible" },
-  { id: 203, reference: "LM-S01", immeubleId: 101, type: "Studio", etage: "Rez-de-chaussée", surface: 38, loyerMensuel: 85000, statut: "En maintenance" },
-  { id: 204, reference: "IB-B03", immeubleId: 102, type: "Bureau", etage: "3e étage", surface: 110, loyerMensuel: 300000, statut: "Occupée" },
-  { id: 205, reference: "CE-B01", immeubleId: 103, type: "Boutique", etage: "Rez-de-chaussée", surface: 45, loyerMensuel: 225000, statut: "Disponible" },
-];
 const formulaireVide = { reference: "", immeubleId: "", type: "Appartement" as TypeUnite, etage: "", surface: "", loyerMensuel: "", statut: "Disponible" as StatutUnite };
+const montant = (valeur: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(valeur) + " FCFA";
 const montant = (valeur: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(valeur) + " FCFA";
 
 export default function PageUnites() {
-  const [unites, setUnites] = useState<Unite[]>(unitesExemple);
-  const [immeubles, setImmeubles] = useState<Immeuble[]>(immeublesExemple);
+  const [unites, setUnites] = useState<Unite[]>([]);
+  const [immeubles, setImmeubles] = useState<Immeuble[]>([]);
   const [initialise, setInitialise] = useState(false);
   const [recherche, setRecherche] = useState("");
   const [filtreStatut, setFiltreStatut] = useState<"Tous" | StatutUnite>("Tous");
@@ -49,30 +24,29 @@ export default function PageUnites() {
   const [formulaire, setFormulaire] = useState(formulaireVide);
 
   useEffect(() => {
-    const temporisateur = window.setTimeout(() => {
-      try {
-        const stockUnites = localStorage.getItem(CLE_UNITES);
-        const stockImmeubles = localStorage.getItem(CLE_IMMEUBLES);
-        if (stockUnites) {
-          const parsed: unknown = JSON.parse(stockUnites);
-          if (Array.isArray(parsed)) setUnites(parsed as Unite[]);
-        }
-        if (stockImmeubles) {
-          const parsed: unknown = JSON.parse(stockImmeubles);
-          if (Array.isArray(parsed) && parsed.length) setImmeubles(parsed as Immeuble[]);
-        }
-      } catch {
-        // Conserver les données de démonstration si le stockage est illisible.
-      } finally {
-        setInitialise(true);
-      }
-    }, 0);
-    return () => window.clearTimeout(temporisateur);
+    let actif = true;
+
+    void Promise.all([
+      depotUnitesDemo.lister(),
+      depotImmeublesDemo.lister()
+    ]).then(([logements, biens]) => {
+      if (!actif) return;
+      setUnites(logements);
+      setImmeubles(biens);
+    }).finally(() => {
+      if (actif) setInitialise(true);
+    });
+
+    return () => {
+      actif = false;
+    };
   }, []);
 
   useEffect(() => {
     if (!initialise) return;
-    try { localStorage.setItem(CLE_UNITES, JSON.stringify(unites)); } catch { /* Stockage local indisponible. */ }
+    void depotUnitesDemo.enregistrer(unites).catch(() => {
+      // L'interface reste utilisable même si le navigateur bloque le stockage local.
+    });
   }, [unites, initialise]);
 
   const immeubleNom = (id: number) => immeubles.find((bien) => bien.id === id)?.nom ?? "Immeuble introuvable";
