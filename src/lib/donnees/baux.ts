@@ -21,8 +21,9 @@ const bauxInitiaux: Bail[] = [
 ];
 
 function estDateIso(valeur: unknown): valeur is string {
-  return typeof valeur === "string" && /^\d{4}-\d{2}-\d{2}$/.test(valeur) &&
-    !Number.isNaN(new Date(valeur + "T00:00:00").getTime());
+  if (typeof valeur !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(valeur)) return false;
+  const date = new Date(valeur + "T00:00:00");
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === valeur;
 }
 
 function estBail(valeur: unknown): valeur is Bail {
