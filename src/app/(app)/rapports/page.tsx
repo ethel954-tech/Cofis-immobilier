@@ -6,57 +6,54 @@ import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Building2, Download, FileText, Home, Users, UserRound, Wrench } from "lucide-react";
 import { CadreApplication } from "@/components/layout/CadreApplication";
 import { exporterCsv } from "@/lib/export/csv";
+import { depotImmeublesDemo, type Immeuble } from "@/lib/donnees/immeubles";
+import { depotUnitesDemo, type Unite } from "@/lib/donnees/unites";
+import { depotLocatairesDemo, type Locataire } from "@/lib/donnees/locataires";
+import { depotBauxDemo, type Bail } from "@/lib/donnees/baux";
+import { depotPaiementsDemo, type Paiement } from "@/lib/donnees/paiements";
+import { depotDepensesDemo, type Depense } from "@/lib/donnees/depenses";
+import { depotProprietairesDemo, type Proprietaire } from "@/lib/donnees/proprietaires";
+import { depotMaintenanceDemo, type Intervention } from "@/lib/donnees/maintenance";
 
-type Immeuble={id:number;nom:string;ville:string;statut?:string};
-type Unite={id:number;reference:string;immeubleId:number;type:string;loyerMensuel:number;statut:string};
-type Locataire={id:number;nom:string;type:string;ville:string;statut:string};
-type Bail={id:number;reference:string;locataireId:number;uniteId:number;dateDebut:string;dateFin:string;loyerMensuel:number;statut:string};
-type PaiementRapport={id:number;reference:string;datePaiement:string;montant:number};
-type DepenseRapport={id:number;reference:string;dateDepense:string;montant:number};
-type ProprietaireRapport={id:number};
-type MaintenanceRapport={id:number;reference:string;priorite:string;dateSignalement:string;statut:string};
-const exemples={
- immeubles:[{id:101,nom:"Résidence Les Manguiers",ville:"Yaoundé"},{id:102,nom:"Immeuble Bonapriso",ville:"Douala"},{id:103,nom:"Centre commercial Étoile",ville:"Yaoundé"}] as Immeuble[],
- unites:[{id:201,reference:"LM-A01",immeubleId:101,type:"Appartement",loyerMensuel:175000,statut:"Occupée"},{id:202,reference:"LM-A02",immeubleId:101,type:"Appartement",loyerMensuel:150000,statut:"Disponible"},{id:203,reference:"LM-S01",immeubleId:101,type:"Studio",loyerMensuel:85000,statut:"En maintenance"},{id:204,reference:"IB-B03",immeubleId:102,type:"Bureau",loyerMensuel:300000,statut:"Occupée"},{id:205,reference:"CE-B01",immeubleId:103,type:"Boutique",loyerMensuel:225000,statut:"Disponible"}] as Unite[],
- locataires:[{id:301,nom:"Exemple — Alice Tchoumi",type:"Particulier",ville:"Yaoundé",statut:"Actif"},{id:302,nom:"Exemple — Cabinet Horizon",type:"Entreprise",ville:"Douala",statut:"Prospect"},{id:303,nom:"Exemple — Paul Ndom",type:"Particulier",ville:"Bafoussam",statut:"Inactif"}] as Locataire[],
- baux:[{id:401,reference:"BAIL-2026-001",locataireId:301,uniteId:201,dateDebut:"2026-01-01",dateFin:"2026-12-31",loyerMensuel:175000,statut:"Actif"},{id:402,reference:"BAIL-2026-002",locataireId:302,uniteId:205,dateDebut:"2026-03-01",dateFin:"2027-02-28",loyerMensuel:225000,statut:"Brouillon"}] as Bail[]
+type DonneesRapport = {
+ immeubles: Immeuble[];
+ unites: Unite[];
+ locataires: Locataire[];
+ baux: Bail[];
+};
+
+const donneesInitiales: DonneesRapport = {
+ immeubles: [],
+ unites: [],
+ locataires: [],
+ baux: []
 };
 const formatNombre=(n:number)=>new Intl.NumberFormat("fr-FR").format(n);
 export default function PageRapports(){
- const [donnees,setDonnees]=useState(exemples);
- const [paiements,setPaiements]=useState<PaiementRapport[]>([]);
- const [depenses,setDepenses]=useState<DepenseRapport[]>([]);
- const [proprietaires,setProprietaires]=useState<ProprietaireRapport[]>([]);
- const [maintenance,setMaintenance]=useState<MaintenanceRapport[]>([]);
+ const [donnees,setDonnees]=useState<DonneesRapport>(donneesInitiales);
+ const [paiements,setPaiements]=useState<Paiement[]>([]);
+ const [depenses,setDepenses]=useState<Depense[]>([]);
+ const [proprietaires,setProprietaires]=useState<Proprietaire[]>([]);
+ const [maintenance,setMaintenance]=useState<Intervention[]>([]);
  const [pret,setPret]=useState(false);
  useEffect(()=>{
-  const identifiant=window.setTimeout(()=>{
-   const lire = <T extends object,>(cle: string, defaut: T[]): T[] => {
-    try {
-     const brut = localStorage.getItem(cle);
-     if (!brut) return defaut;
-
-     const donnees: unknown = JSON.parse(brut);
-     if (!Array.isArray(donnees)) return defaut;
-
-     return donnees.filter(
-      (element): element is T =>
-       typeof element === "object" &&
-       element !== null &&
-       !Array.isArray(element)
-     );
-    } catch {
-     return defaut;
-    }
-   };
-   setDonnees({immeubles:lire("cofis_demo_immeubles_v1",exemples.immeubles),unites:lire("cofis_demo_unites_v1",exemples.unites),locataires:lire("cofis_demo_locataires_v1",exemples.locataires),baux:lire("cofis_demo_baux_v1",exemples.baux)});
-   setPaiements(lire("cofis_demo_paiements_v1",[]));
-   setDepenses(lire("cofis_demo_depenses_v1",[]));
-   setProprietaires(lire("cofis_demo_proprietaires_v1",[]));
-   setMaintenance(lire("cofis_demo_maintenance_v1",[]));
+  void Promise.all([
+   depotImmeublesDemo.lister(),
+   depotUnitesDemo.lister(),
+   depotLocatairesDemo.lister(),
+   depotBauxDemo.lister(),
+   depotPaiementsDemo.lister(),
+   depotDepensesDemo.lister(),
+   depotProprietairesDemo.lister(),
+   depotMaintenanceDemo.lister()
+  ]).then(([immeubles,unites,locataires,baux,paiementsCharges,depensesChargees,proprietairesCharges,maintenanceChargee])=>{
+   setDonnees({immeubles,unites,locataires,baux});
+   setPaiements(paiementsCharges);
+   setDepenses(depensesChargees);
+   setProprietaires(proprietairesCharges);
+   setMaintenance(maintenanceChargee);
    setPret(true);
-  },0);
-  return()=>window.clearTimeout(identifiant);
+  });
  },[]);
  const stats=useMemo(()=>{
   const {immeubles,unites,locataires,baux}=donnees;
