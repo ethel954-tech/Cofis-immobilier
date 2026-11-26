@@ -22,38 +22,11 @@ import {
 import { CadreApplication } from "@/components/layout/CadreApplication";
 import { exporterCsv as exporterCsvCommun } from "@/lib/export/csv";
 
-type TypeProprietaire = "Particulier" | "Société";
-
-type Proprietaire = {
-  id: number;
-  nom: string;
-  type: TypeProprietaire;
-  telephone: string;
-  email: string;
-  ville: string;
-  biens: number;
-};
-
-const proprietairesInitiaux: Proprietaire[] = [
-  { id: 1, nom: "Exemple — Jean Mbarga", type: "Particulier", telephone: "+237 6 90 00 00 01", email: "jean.exemple@cofis.cm", ville: "Yaoundé", biens: 3 },
-  { id: 2, nom: "Exemple — Société Immobilière", type: "Société", telephone: "+237 6 90 00 00 02", email: "contact.exemple@cofis.cm", ville: "Douala", biens: 8 },
-  { id: 3, nom: "Exemple — Marie Nguemo", type: "Particulier", telephone: "+237 6 90 00 00 03", email: "marie.exemple@cofis.cm", ville: "Bafoussam", biens: 1 }
-];
-
-const CLE_STOCKAGE_PROPRIETAIRES = "cofis_demo_proprietaires_v1";
+import { depotProprietairesDemo } from "@/lib/donnees/proprietaires";
+import type { Proprietaire, TypeProprietaire } from "@/lib/donnees/proprietaires";
 
 function normaliserTelephone(valeur: string): string {
   return valeur.replace(/\D/g, "");
-}
-
-function donneesProprietairesValides(valeur: unknown): valeur is Proprietaire[] {
-  return Array.isArray(valeur) && valeur.every((element) =>
-    typeof element === "object" && element !== null &&
-    Number.isSafeInteger(element.id) && typeof element.nom === "string" &&
-    (element.type === "Particulier" || element.type === "Société") &&
-    typeof element.telephone === "string" && typeof element.email === "string" &&
-    typeof element.ville === "string" && Number.isSafeInteger(element.biens) && element.biens >= 0
-  );
 }
 
 const formulaireVide = {
@@ -65,34 +38,28 @@ const formulaireVide = {
 };
 
 export default function PageProprietaires() {
-  const [proprietaires, setProprietaires] = useState(proprietairesInitiaux);
+  const [proprietaires, setProprietaires] = useState<Proprietaire[]>([]);
   const [stockageInitialise, setStockageInitialise] = useState(false);
 
   useEffect(() => {
-    const identifiant = window.setTimeout(() => {
-      try {
-        const donneesEnregistrees = window.localStorage.getItem(CLE_STOCKAGE_PROPRIETAIRES);
-        if (donneesEnregistrees) {
-          const proprietairesEnregistres: unknown = JSON.parse(donneesEnregistrees);
-          if (donneesProprietairesValides(proprietairesEnregistres)) {
-            setProprietaires(proprietairesEnregistres);
-          }
-        }
-      } catch {
-        // En cas de stockage illisible, conserver les données de démonstration initiales.
-      }
-      setStockageInitialise(true);
-    }, 0);
-    return () => window.clearTimeout(identifiant);
+    let actif = true;
+
+    void depotProprietairesDemo.lister().then((donnees) => {
+      if (actif) setProprietaires(donnees);
+    }).finally(() => {
+      if (actif) setStockageInitialise(true);
+    });
+
+    return () => {
+      actif = false;
+    };
   }, []);
 
   useEffect(() => {
     if (!stockageInitialise) return;
-    try {
-      window.localStorage.setItem(CLE_STOCKAGE_PROPRIETAIRES, JSON.stringify(proprietaires));
-    } catch {
+    void depotProprietairesDemo.enregistrer(proprietaires).catch(() => {
       // L'interface reste utilisable même si le navigateur bloque le stockage local.
-    }
+    });
   }, [proprietaires, stockageInitialise]);
   const [recherche, setRecherche] = useState("");
   const [filtre, setFiltre] = useState<"Tous" | TypeProprietaire>("Tous");
