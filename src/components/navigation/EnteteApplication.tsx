@@ -20,6 +20,7 @@ const titresPages: Record<string, string> = {
   "/reversements": "Reversements",
   "/rapports": "Rapports",
   "/parametres": "Paramètres",
+  "/utilisateurs": "Équipe & utilisateurs",
 };
 
 const liensMobiles = [
@@ -33,6 +34,7 @@ const liensMobiles = [
   { libelle: "Paiements", href: "/paiements", groupe: "Finance" },
   { libelle: "Dépenses", href: "/depenses", groupe: "Finance" },
   { libelle: "Rapports", href: "/rapports", groupe: "Pilotage" },
+  { libelle: "Utilisateurs", href: "/utilisateurs", groupe: "Administration" },
   { libelle: "Paramètres", href: "/parametres", groupe: "Administration" },
 ];
 
